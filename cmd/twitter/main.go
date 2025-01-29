@@ -6,20 +6,8 @@ import (
 
 	"github.com/NavidKalashi/twitter/internal/adapters/repository"
 	"github.com/NavidKalashi/twitter/internal/config"
-    "gorm.io/driver/postgres"
-	"gorm.io/gorm"
+    "github.com/NavidKalashi/twitter/internal/infra/database"
 )
-
-func InitDB(cfg *config.Config) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
-		cfg.DB.Host, cfg.DB.User, cfg.DB.Password, cfg.DB.Name, cfg.DB.Port)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	return db, nil
-}
 
 func main() {
 	cfg, err := config.LoadConfig()
@@ -27,7 +15,7 @@ func main() {
         log.Fatalf("Failed to load config: %v", err)
     }
 
-    db, err := InitDB(cfg)
+    db, err := database.InitDB(cfg)
     if err != nil {
         log.Fatalf("failed to initialize database: %v", err)
     }
