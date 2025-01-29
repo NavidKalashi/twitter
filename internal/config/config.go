@@ -18,9 +18,9 @@ type Config struct {
 	} `mapstructure:"db"`
 }
 
-var Cfg *Config
+var Cfg Config
 
-func LoadConfig() {
+func LoadConfig() (*Config, error){
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("internal/config")
@@ -29,7 +29,10 @@ func LoadConfig() {
 		log.Fatalf("error reading config file, %s", err)
 	}
 
+	
 	if err := viper.Unmarshal(&Cfg); err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
+
+	return &Cfg, nil
 }
