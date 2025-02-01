@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package tweet;
+
+import "google/api/annotations.proto";
+
+service TweetService {
+    rpc CreateTweet(CreateTweetRequest) returns (CreateTweetResponse) {
+        option (google.api.http) = {
+            post: "/v1/tweets"
+            body: "*"
+        };
+    }
+    rpc GetTweet(GetTweetRequest) returns (GetTweetResponse) {
+        option (google.api.http) = {
+            get: "/v1/tweets/{id}"
+        };
+    }
+}
+
+message CreateTweetRequest {
+    string content = 1;
+}
+
+message CreateTweetResponse {
+    string id = 1;
+}
+
+message GetTweetRequest {
+    string id = 1;
+}
+
+message GetTweetResponse {
+    string id = 1;
+    string content = 2;
+}

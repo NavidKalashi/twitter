@@ -4,7 +4,6 @@ import (
 	"log"
     "fmt"
 
-	"github.com/NavidKalashi/twitter/internal/adapters/repository"
 	"github.com/NavidKalashi/twitter/internal/config"
     "github.com/NavidKalashi/twitter/internal/infra/database"
 )
@@ -20,8 +19,7 @@ func main() {
         log.Fatalf("failed to initialize database: %v", err)
     }
     
-    repository.NewRepository(db)
-
+    fmt.Println(db)
     fmt.Println("App Name:", cfg.Twitter)
     fmt.Println("Database Host:", cfg.DB.Host)
     fmt.Println("Port:", cfg.Port)
