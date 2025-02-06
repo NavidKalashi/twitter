@@ -1,28 +1,32 @@
 package main
 
 import (
-    "log"
+	"log"
 
-	"github.com/NavidKalashi/twitter/internal/adapters/repository"
+	"github.com/NavidKalashi/twitter/internal/adapters/api"
+	"github.com/NavidKalashi/twitter/internal/adapters/api/controller"
+	"github.com/NavidKalashi/twitter/internal/adapters/api/middleware"
+	"github.com/NavidKalashi/twitter/internal/adapters/infra/postgres"
 	"github.com/NavidKalashi/twitter/internal/config"
-    "github.com/NavidKalashi/twitter/internal/infra/database"
-    "github.com/NavidKalashi/twitter/internal/infra/server"
+	"github.com/NavidKalashi/twitter/internal/core/service"
 )
 
 func main() {
-    cfg, err := config.LoadConfig()
-    if (err != nil) {
-        log.Fatalf("Failed to load config: %v", err)
-    }
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
 
-    db, err := database.InitDB(cfg)
-    if (err != nil) {
-        log.Fatalf("failed to initialize database: %v", err)
-    }
-    
-    repository.NewRepository(db)
+	db, err := postgres.InitDB(cfg)
+	if err != nil {
+		log.Fatalf("failed to initialize database: %v", err)
+	}
 
-    fmt.Println("App Name:", cfg.Twitter)
-    fmt.Println("Database Host:", cfg.DB.Host)
-    fmt.Println("Port:", cfg.Port)
+
+	middleware.AuthMiddleware()
+
+	tweetService := service.NewTweetService(db.GetDB())
+	tweetController := controller.NewTweetController(tweetService)
+	server := api.NewServer(tweetController)
+	server.Start()
 }
