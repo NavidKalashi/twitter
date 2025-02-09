@@ -1,11 +1,11 @@
 package service
 
-import "database/sql"
+import "gorm.io/gorm"
 
 type TweetService struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewTweetService(db *sql.DB) *TweetService {
+func NewTweetService(db *gorm.DB) *TweetService {
 	return &TweetService{db: db}
 }

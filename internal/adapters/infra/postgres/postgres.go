@@ -1,34 +1,39 @@
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
-
+	
 	"github.com/NavidKalashi/twitter/internal/config"
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type DB struct {
-	Conn *sql.DB
+	Conn *gorm.DB
 }
 
 func InitDB(cfg *config.Config) (*DB, error) {
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.Password, cfg.DB.Name)
-	db, err := sql.Open("postgres", connStr)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
+	sqlDB, err := db.DB()
+    if err != nil {
+        return nil, err
+    }
+
+	if err := sqlDB.Ping(); err != nil {
+        return nil, err
+    }
 
 	log.Println("Database connection established")
 	return &DB{Conn: db}, nil
 }
 
-func (db *DB) GetDB() *sql.DB {
+func (db *DB) GetDB() *gorm.DB {
 	return db.Conn
 }
