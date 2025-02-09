@@ -6,27 +6,38 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var engine = gin.Default()
-
 type Server struct {
 	tweetController *controller.TweetController
+	userController  *controller.UserController
+	engine          *gin.Engine
 }
 
-func NewServer(tweetController *controller.TweetController) *Server {
-	server := &Server{tweetController: tweetController}
-	server.AddRoutes(tweetController)
+func NewServer(tweetController *controller.TweetController, userController *controller.UserController) *Server {
+	server := &Server{
+		tweetController: tweetController,
+		userController:  userController,
+	}
+	server.engine = gin.Default()
+	server.AddRoutes(tweetController, userController)
 	return server
 }
 
-func (s *Server) AddRoutes(tweetController *controller.TweetController) {
-	engine.Use(middleware.AuthMiddleware())
-	engine.POST("/tweets", s.tweetController.CreateTweet)
-	engine.GET("/tweets", s.tweetController.GetTweets)
-	engine.GET("/tweets/:id", s.tweetController.GetTweet)
-	engine.PUT("/tweets/:id", s.tweetController.UpdateTweet)
-	engine.DELETE("/tweets/:id", s.tweetController.DeleteTweet)
+func (s *Server) AddRoutes(tweetController *controller.TweetController, userController *controller.UserController) {
+	s.engine.Use(middleware.AuthMiddleware())
+	s.engine.POST("/tweets", tweetController.CreateTweet)
+	s.engine.GET("/tweets", tweetController.GetTweets)
+	s.engine.GET("/tweets/:id", tweetController.GetTweet)
+	s.engine.PUT("/tweets/:id", tweetController.UpdateTweet)
+	s.engine.DELETE("/tweets/:id", tweetController.DeleteTweet)
+
+	s.engine.POST("/user", userController.CreateUser)
+	s.engine.GET("/user", userController.GetUser)
+	s.engine.GET("/user/:id", userController.GetUser)
+	s.engine.PUT("/user/:id", userController.UpdateUser)
+	s.engine.DELETE("/user/:id", userController.DeleteUser)
 }
 
 func (s *Server) Start() {
-	engine.Run(":8080")
+	s.engine.SetTrustedProxies([]string{"127.0.0.1"})
+	s.engine.Run(":8080")
 }

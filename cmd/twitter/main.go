@@ -25,8 +25,13 @@ func main() {
 
 	middleware.AuthMiddleware()
 
+	// twitter
 	tweetService := service.NewTweetService(db.GetDB())
 	tweetController := controller.NewTweetController(tweetService)
-	server := api.NewServer(tweetController)
+	// user
+	userService := service.NewUserService(db.GetDB())
+	userController := controller.NewUserController(userService)
+	
+	server := api.NewServer(tweetController, userController)
 	server.Start()
 }

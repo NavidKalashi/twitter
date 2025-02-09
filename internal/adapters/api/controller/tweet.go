@@ -14,7 +14,7 @@ func NewTweetController(tweetService *service.TweetService) *TweetController {
 }
 
 func (c *TweetController) CreateTweet(ctx *gin.Context) {
-
+	
 }
 
 func (c *TweetController) GetTweets(ctx *gin.Context) {
