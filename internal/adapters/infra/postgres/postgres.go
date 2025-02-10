@@ -7,6 +7,7 @@ import (
 	"github.com/NavidKalashi/twitter/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 )
 
 type DB struct {
@@ -17,6 +18,11 @@ func InitDB(cfg *config.Config) (*DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.Password, cfg.DB.Name)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.AutoMigrate(&model.User{})
 	if err != nil {
 		return nil, err
 	}

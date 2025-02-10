@@ -22,7 +22,6 @@ func main() {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
 
-
 	middleware.AuthMiddleware()
 
 	// twitter
