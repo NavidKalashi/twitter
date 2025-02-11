@@ -22,7 +22,7 @@ func InitDB(cfg *config.Config) (*DB, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&model.User{})
+	err = db.AutoMigrate(&models.User{})
 	if err != nil {
 		return nil, err
 	}
