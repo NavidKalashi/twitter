@@ -17,11 +17,12 @@ func NewServer(tweetController *controller.TweetController, userController *cont
 		userController:  userController,
 	}
 	server.engine = gin.Default()
-	server.AddRoutes(tweetController, userController)
+	server.AddRoutes(userController)
 	return server
 }
 
-func (s *Server) AddRoutes(tweetController *controller.TweetController, userController *controller.UserController) {
+func (s *Server) AddRoutes(userController *controller.UserController) {
+	s.engine.POST("/users", userController.ControllerCreateUser)
 }
 
 func (s *Server) Start() {
