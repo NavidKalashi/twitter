@@ -1,18 +1,18 @@
 package service
 
 import (
-	"github.com/NavidKalashi/twitter/internal/adapters/infra/repository"
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
+	"github.com/NavidKalashi/twitter/internal/core/ports"
 )
 
 type UserService struct {
-	repo *repository.UserGormRepository
+	userRepository *ports.UserGormRepository
 }
 
-func NewUserService(repo *repository.UserGormRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(userRepository *ports.UserGormRepository) *UserService {
+	return &UserService{userRepository: userRepository}
 }
 
 func (s *UserService) CreateUser(user *models.User) error {
-	return s.repo.RepoCreateUser(user)
+	return s.userRepository.RepoCreateUser(user)
 }
