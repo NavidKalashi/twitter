@@ -6,13 +6,13 @@ import (
 )
 
 type UserService struct {
-	userRepository *ports.UserGormRepository
+	repo ports.UserRepository
 }
 
-func NewUserService(userRepository *ports.UserGormRepository) *UserService {
-	return &UserService{userRepository: userRepository}
+func NewUserService(repo ports.UserRepository) *UserService {
+	return &UserService{repo: repo}
 }
 
 func (s *UserService) CreateUser(user *models.User) error {
-	return s.userRepository.RepoCreateUser(user)
+	return s.repo.CreateUser(user)
 }

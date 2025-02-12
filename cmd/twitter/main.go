@@ -7,8 +7,8 @@ import (
 	"github.com/NavidKalashi/twitter/internal/adapters/api/controller"
 	"github.com/NavidKalashi/twitter/internal/adapters/api/middleware"
 	"github.com/NavidKalashi/twitter/internal/adapters/infra/postgres"
+	"github.com/NavidKalashi/twitter/internal/adapters/repository"
 	"github.com/NavidKalashi/twitter/internal/config"
-	"github.com/NavidKalashi/twitter/internal/core/ports"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 )
 
@@ -28,8 +28,9 @@ func main() {
 	// twitter
 	tweetService := service.NewTweetService(db.GetDB())
 	tweetController := controller.NewTweetController(tweetService)
+	
 	// user
-	userRepository := ports.NewUserGormRepository(db.GetDB())
+	userRepository := repository.NewUserGormRepository(db.GetDB())
 	userService := service.NewUserService(userRepository)
 	userController := controller.NewUserController(userService)
 	
