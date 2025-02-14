@@ -22,7 +22,10 @@ func NewServer(tweetController *controller.TweetController, userController *cont
 }
 
 func (s *Server) AddRoutes(userController *controller.UserController) {
-	s.engine.POST("/users", userController.ControllerCreateUser)
+	s.engine.POST("/user", userController.CreateUserController)
+	s.engine.GET("/user/:id", userController.GetUserController)
+	s.engine.DELETE("/user/:id", userController.DeleteUserController)
+	s.engine.PUT("/user/update", userController.UpdateUserController)
 }
 
 func (s *Server) Start() {
