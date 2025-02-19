@@ -23,7 +23,8 @@ func (r *UserGormRepository) CreateUser(user *models.User) error {
 
 func (r *UserGormRepository) GetUser(id uuid.UUID) (*models.User, error) {
 	var user models.User
-	if err := r.db.First(&user, id).Error; err != nil {
+	if err := r.db.First(&user, id).Error
+	err != nil {
 		return nil, err
 	}
 	return &user, nil

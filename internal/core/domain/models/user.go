@@ -17,9 +17,19 @@ type User struct {
 	Birthday  time.Time `gorm:"type:date" json:"birthday"`
 	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
 	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`
+	OTP       []OTP
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID = uuid.New()
 	return
+}
+
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	otp := OTP{
+		UserID: u.ID,
+		Code:   generateOTP(),
+	}
+	err = tx.Create(&otp).Error
+	return err
 }

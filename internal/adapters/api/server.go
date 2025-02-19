@@ -6,14 +6,12 @@ import (
 )
 
 type Server struct {
-	tweetController *controller.TweetController
 	userController  *controller.UserController
 	engine          *gin.Engine
 }
 
-func NewServer(tweetController *controller.TweetController, userController *controller.UserController) *Server {
+func NewServer(userController *controller.UserController) *Server {
 	server := &Server{
-		tweetController: tweetController,
 		userController:  userController,
 	}
 	server.engine = gin.Default()
@@ -26,6 +24,7 @@ func (s *Server) AddRoutes(userController *controller.UserController) {
 	s.engine.GET("/user/:id", userController.GetUserController)
 	s.engine.DELETE("/user/:id", userController.DeleteUserController)
 	s.engine.PUT("/user/update", userController.UpdateUserController)
+
 }
 
 func (s *Server) Start() {
