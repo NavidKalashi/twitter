@@ -43,6 +43,8 @@ func (r *UserGormRepository) UpdateUser(user *models.User) error {
 
 func (r *UserGormRepository) DeleteUser(id uuid.UUID) error {
 	var user models.User
+	var otp models.OTP
+	r.db.Where("user_id = ?", id).Delete(&otp)
 	result := r.db.Delete(&user, id)
 	if result.Error != nil {
 		return result.Error
