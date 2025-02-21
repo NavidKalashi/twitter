@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/NavidKalashi/twitter/internal/adapters/api"
@@ -9,7 +8,6 @@ import (
 	"github.com/NavidKalashi/twitter/internal/adapters/infra/postgres"
 	"github.com/NavidKalashi/twitter/internal/adapters/repository"
 	"github.com/NavidKalashi/twitter/internal/config"
-	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 )
 
@@ -25,11 +23,9 @@ func main() {
 	}
 
 	// user
-	userRepository := repository.NewUserGormRepository(db.GetDB())
+	userRepository := repository.NewUserRepository(db.GetDB())
 	userService := service.NewUserService(userRepository)
 	userController := controller.NewUserController(userService)
-
-	fmt.Println("here", models.OTP{})
 
 	server := api.NewServer(userController)
 	server.Start()

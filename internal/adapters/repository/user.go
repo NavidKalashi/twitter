@@ -9,19 +9,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserGormRepository struct {
+type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserGormRepository(db *gorm.DB) ports.UserRepository {
-	return &UserGormRepository{db: db}
+func NewUserRepository(db *gorm.DB) ports.UserRepository {
+	return &UserRepository{db: db}
 }
 
-func (r *UserGormRepository) CreateUser(user *models.User) error {
+func (r *UserRepository) CreateUser(user *models.User) error {
     return r.db.Create(user).Error
 }
 
-func (r *UserGormRepository) GetUser(id uuid.UUID) (*models.User, error) {
+func (r *UserRepository) GetUser(id uuid.UUID) (*models.User, error) {
 	var user models.User
 	if err := r.db.First(&user, id).Error
 	err != nil {
@@ -30,7 +30,7 @@ func (r *UserGormRepository) GetUser(id uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserGormRepository) UpdateUser(user *models.User) error {
+func (r *UserRepository) UpdateUser(user *models.User) error {
 	result := r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(user)
 	if result.Error != nil {
 		return result.Error
@@ -41,7 +41,7 @@ func (r *UserGormRepository) UpdateUser(user *models.User) error {
 	return nil
 }
 
-func (r *UserGormRepository) DeleteUser(id uuid.UUID) error {
+func (r *UserRepository) DeleteUser(id uuid.UUID) error {
 	var user models.User
 	var otp models.OTP
 	r.db.Where("user_id = ?", id).Delete(&otp)

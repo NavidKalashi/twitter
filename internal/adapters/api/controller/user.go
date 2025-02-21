@@ -32,7 +32,7 @@ func (uc *UserController) CreateUserController(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "otp code created"})
+	c.JSON(http.StatusCreated, gin.H{"message": "user created"})
 }
 
 func (uc *UserController) GetUserController(c *gin.Context) {
