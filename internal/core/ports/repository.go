@@ -12,3 +12,8 @@ type UserRepository interface {
 	DeleteUser(id uuid.UUID) error
 	// GetUsers() ([]models.User, error)
 }
+
+type EmailRepository interface {
+	Send(to string, message string) error
+	SendOTP(to string, otp string) error
+}

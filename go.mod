@@ -4,7 +4,6 @@ go 1.23.2
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/resend/resend-go/v2 v2.15.0
 	github.com/spf13/viper v1.19.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
