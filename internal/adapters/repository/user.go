@@ -17,11 +17,29 @@ func NewUserRepository(db *gorm.DB) ports.UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(user *models.User) error {
+func (r *UserRepository) Register(user *models.User) error {
     return r.db.Create(user).Error
 }
 
-func (r *UserRepository) GetUser(id uuid.UUID) (*models.User, error) {
+func (r *UserRepository) EmailExist(email string) (*models.User, error) {
+	var user models.User
+	result := r.db.Where("email = ?", email).First(&user)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &user, result.Error
+}
+
+func (r *UserRepository) UsernameExist(username string) (*models.User, error) {
+	var user models.User
+	result := r.db.Where("username = ?", username).First(&user)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &user, result.Error
+}
+
+func (r *UserRepository) Get(id uuid.UUID) (*models.User, error) {
 	var user models.User
 	if err := r.db.First(&user, id).Error
 	err != nil {
@@ -30,7 +48,7 @@ func (r *UserRepository) GetUser(id uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateUser(user *models.User) error {
+func (r *UserRepository) Update(user *models.User) error {
 	result := r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(user)
 	if result.Error != nil {
 		return result.Error
@@ -41,7 +59,7 @@ func (r *UserRepository) UpdateUser(user *models.User) error {
 	return nil
 }
 
-func (r *UserRepository) DeleteUser(id uuid.UUID) error {
+func (r *UserRepository) Delete(id uuid.UUID) error {
 	var user models.User
 	var otp models.OTP
 	r.db.Where("user_id = ?", id).Delete(&otp)

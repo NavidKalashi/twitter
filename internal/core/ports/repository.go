@@ -6,10 +6,12 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(user *models.User) error
-	GetUser(id uuid.UUID) (*models.User, error)
-	UpdateUser(user *models.User) error
-	DeleteUser(id uuid.UUID) error
+	Register(user *models.User) error
+	Get(id uuid.UUID) (*models.User, error)
+	Update(user *models.User) error
+	Delete(id uuid.UUID) error
+	EmailExist(email string) (*models.User, error)
+	UsernameExist(username string) (*models.User, error)
 	// GetUsers() ([]models.User, error)
 }
 

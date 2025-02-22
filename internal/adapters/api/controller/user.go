@@ -26,7 +26,7 @@ func (uc *UserController) CreateUserController(c *gin.Context) {
 		return
 	}
 
-	if err := uc.userService.CreateUser(&user)
+	if err := uc.userService.Register(&user)
 	err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -43,7 +43,7 @@ func (uc *UserController) GetUserController(c *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.GetUser(userID)
+	user, err := uc.userService.Get(userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -63,7 +63,7 @@ func (uc *UserController) UpdateUserController(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request users"})
 	}
 
-	err := uc.userService.UpdateUser(&user)
+	err := uc.userService.Update(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
@@ -79,7 +79,7 @@ func (uc *UserController) DeleteUserController(c *gin.Context) {
 		return
 	}
 
-	err = uc.userService.DeleteUser(userID)
+	err = uc.userService.Delete(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
