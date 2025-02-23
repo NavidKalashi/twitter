@@ -22,9 +22,12 @@ func main() {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
 
+	// otp
+	otpRepository := repository.NewOTPRepository(db.GetDB())
+
 	// user
 	userRepository := repository.NewUserRepository(db.GetDB())
-	userService := service.NewUserService(userRepository)
+	userService := service.NewUserService(userRepository, otpRepository)
 	userController := controller.NewUserController(userService)
 
 	server := api.NewServer(userController)

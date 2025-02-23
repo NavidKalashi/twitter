@@ -15,7 +15,11 @@ type UserRepository interface {
 	// GetUsers() ([]models.User, error)
 }
 
-type EmailRepository interface {
+type EmailService interface {
 	Send(to string, message string) error
-	SendOTP(to string, otp string) error
+	SendOTP(to string, code uint) error
+}
+
+type OTPRepository interface {
+	Create(user *models.User, code uint) error
 }

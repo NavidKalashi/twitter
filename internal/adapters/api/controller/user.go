@@ -20,19 +20,21 @@ func NewUserController(userService *service.UserService) *UserController {
 
 func (uc *UserController) CreateUserController(c *gin.Context) {
 	var user models.User
+	var otp models.OTP
+
 	if err := c.ShouldBindJSON(&user)
 	err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := uc.userService.Register(&user)
+	if err := uc.userService.Register(&user, &otp)
 	err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user not created"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "user created"})
+	c.JSON(http.StatusCreated, gin.H{"message": "verification code sent"})
 }
 
 func (uc *UserController) GetUserController(c *gin.Context) {
