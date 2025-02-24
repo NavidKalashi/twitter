@@ -8,6 +8,7 @@ import (
 type UserRepository interface {
 	Register(user *models.User) error
 	Get(id uuid.UUID) (*models.User, error)
+	GetByEmail(email string) (*models.User, error)
 	Update(user *models.User) error
 	Delete(id uuid.UUID) error
 	EmailExist(email string) (*models.User, error)
@@ -22,4 +23,5 @@ type EmailService interface {
 
 type OTPRepository interface {
 	Create(user *models.User, code uint) error
+	FindByUserID(userID string) (*models.OTP, error)
 }

@@ -22,19 +22,21 @@ func (uc *UserController) CreateUserController(c *gin.Context) {
 	var user models.User
 	var otp models.OTP
 
-	if err := c.ShouldBindJSON(&user)
-	err != nil {
+	err := c.ShouldBindJSON(&user)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := uc.userService.Register(&user, &otp)
-	err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "user not created"})
+	tokenString, err := uc.userService.Register(&user, &otp)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "verification code sent"})
+	uc.userService.VerifyToken(tokenString)
+
+	c.JSON(http.StatusCreated, gin.H{"message": "verify code sent"})
 }
 
 func (uc *UserController) GetUserController(c *gin.Context) {
@@ -88,4 +90,23 @@ func (uc *UserController) DeleteUserController(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+func (uc *UserController) VerifyUserController(c *gin.Context) {
+	userID := c.Param("id")
+	var json struct {
+		Code  uint   `json:"code"`
+	}
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := uc.userService.VerifyOtp(userID, json.Code)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"message": "your email verified"})
 }

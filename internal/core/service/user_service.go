@@ -2,12 +2,14 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
-	"github.com/NavidKalashi/twitter/pkg/jwt"
+	jwtPackage "github.com/NavidKalashi/twitter/pkg/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -29,25 +31,24 @@ func generateOTP() uint {
 	return uint(rand.Intn(900000) + 100000)
 }
 
-func (us *UserService) Register(user *models.User, otp *models.OTP) error {
+func (us *UserService) Register(user *models.User, otp *models.OTP) (string, error) {
 
 	// check email and username not exist
 	email, err := us.UserRepo.EmailExist(user.Email)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if email != nil {
-		return errors.New("email already exist")
+		return "", errors.New("email already exist")
 	}
 
 	username, err := us.UserRepo.UsernameExist(user.Username)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if username != nil {
-		return errors.New("username already exist")
+		return "", errors.New("username already exist")
 	}
-	
 	
 	us.UserRepo.Register(user)
 	
@@ -56,13 +57,15 @@ func (us *UserService) Register(user *models.User, otp *models.OTP) error {
 	us.OTPRepo.Create(user, code)
 	
 	// generate jwt token
-	tokenString := jwt.GenerateToken(otp, code)
+	token, err := jwtPackage.GenerateJwt(user.Email, user.Username)
+	if err != nil {
+		return "", errors.New("token not created")
+	}
 
 	// send email
 	us.EmailService.SendOTP(user.Email, code)
-	
-	// return token
-	return tokenString
+
+	return token, nil
 }
 
 func (us *UserService) Get(id uuid.UUID) (*models.User, error) {
@@ -90,6 +93,53 @@ func (us *UserService) Delete(id uuid.UUID) error {
 }
 
 // verify email service method
+func (us *UserService) VerifyToken(tokenString string) error {
+	var secretKey = []byte("your_secret_key")
+	claims := &jwt.MapClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC)
+		!ok {
+            return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
+		return secretKey, nil
+	})
+	
+	if err != nil {
+		return err
+	}
+	
+	if token.Valid {
+		if exp, ok := (*claims)["exp"].(float64); ok {
+			if time.Unix(int64(exp), 0).Before(time.Now()) {
+				return fmt.Errorf("token has expired")
+			}
+		} else {
+			return fmt.Errorf("expiration claim missing or invalid")
+		}
+
+		if email, ok := (*claims)["email"].(string); ok {
+			if email == "" {
+				return fmt.Errorf("email claim is empty")
+			}
+		} else {
+			return fmt.Errorf("email claim missing or invalid")
+		}
+	}
+	return nil
+}
+
+func (us *UserService) VerifyOtp(userID string, code uint) error {
+    otp, err := us.OTPRepo.FindByUserID(userID)
+    if err != nil {
+        return fmt.Errorf("failed to find OTP: %w", err)
+    }
+    if otp.Code != code {
+        return fmt.Errorf("invalid OTP code")
+    }
+    // Proceed with email verification
+    return nil
+}
 
 // step 1: verify jwt signiture
 // step 2: get user last otp code

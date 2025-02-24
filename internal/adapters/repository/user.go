@@ -48,6 +48,15 @@ func (r *UserRepository) Get(id uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
+	var user models.User
+	if err := r.db.First(&user, email).Error
+	err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) Update(user *models.User) error {
 	result := r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(user)
 	if result.Error != nil {
