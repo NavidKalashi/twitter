@@ -96,6 +96,7 @@ func (us *UserService) VerifyToken(tokenString string, userID string, code uint)
 	var secretKey = []byte("your_secret_key")
 	claims := &jwt.MapClaims{}
 
+	// token verify
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC)
 		!ok {
@@ -128,6 +129,7 @@ func (us *UserService) VerifyToken(tokenString string, userID string, code uint)
 		}
 	}
 
+	// check to otp
 	otp, err := us.OTPRepo.FindByUserID(userID)
     if err != nil {
         return fmt.Errorf("failed to find OTP: %w", err)
@@ -135,13 +137,16 @@ func (us *UserService) VerifyToken(tokenString string, userID string, code uint)
     } else if time.Now().After(otp.CreatedAt.Add(5 * time.Minute)) {
 		return fmt.Errorf("otp is timeout")
 
-	} else if otp.Code != code && !otp.Verified {
+	} else if otp.Code != code {
         return fmt.Errorf("invalid OTP code")
-    }
+
+    } else {
+		otp.Verified = true
+		if err := us.OTPRepo.Verified(otp)
+		err != nil {
+			return fmt.Errorf("failed to change otp status")
+		}
+	}
 
 	return nil
 }
-// step 1: verify jwt signiture
-// step 2: get user last otp code
-// step 3: compare otp codes
-// step 4: change user email status to verified

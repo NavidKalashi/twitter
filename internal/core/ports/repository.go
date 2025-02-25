@@ -24,4 +24,5 @@ type EmailService interface {
 type OTPRepository interface {
 	Create(user *models.User, code uint) error
 	FindByUserID(userID string) (*models.OTP, error)
+	Verified(otp *models.OTP) error
 }

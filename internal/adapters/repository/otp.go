@@ -30,3 +30,7 @@ func (r *OTPRepository) FindByUserID(userID string) (*models.OTP, error) {
     }
     return &otp, nil
 }
+
+func (repo *OTPRepository) Verified(otp *models.OTP) error {
+    return repo.db.Save(otp).Error
+}
