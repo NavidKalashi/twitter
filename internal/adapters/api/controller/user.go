@@ -34,9 +34,7 @@ func (uc *UserController) CreateUserController(c *gin.Context) {
 		return
 	}
 
-	uc.userService.VerifyToken(tokenString)
-
-	c.JSON(http.StatusCreated, gin.H{"message": "verify code sent"})
+	c.JSON(http.StatusCreated, gin.H{"message": tokenString})
 }
 
 func (uc *UserController) GetUserController(c *gin.Context) {
@@ -95,6 +93,7 @@ func (uc *UserController) DeleteUserController(c *gin.Context) {
 func (uc *UserController) VerifyUserController(c *gin.Context) {
 	userID := c.Param("id")
 	var json struct {
+		Token string `json:"token"`
 		Code  uint   `json:"code"`
 	}
 
@@ -103,10 +102,11 @@ func (uc *UserController) VerifyUserController(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.VerifyOtp(userID, json.Code)
+	err := uc.userService.VerifyToken(json.Token, userID, json.Code)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{"message": "your email verified"})
+	c.JSON(http.StatusOK, gin.H{"message": "your email verified"})
 }

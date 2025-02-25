@@ -92,8 +92,7 @@ func (us *UserService) Delete(id uuid.UUID) error {
 	return us.UserRepo.Delete(id)
 }
 
-// verify email service method
-func (us *UserService) VerifyToken(tokenString string) error {
+func (us *UserService) VerifyToken(tokenString string, userID string, code uint) error {
 	var secretKey = []byte("your_secret_key")
 	claims := &jwt.MapClaims{}
 
@@ -110,15 +109,17 @@ func (us *UserService) VerifyToken(tokenString string) error {
 	}
 	
 	if token.Valid {
-		if exp, ok := (*claims)["exp"].(float64); ok {
-			if time.Unix(int64(exp), 0).Before(time.Now()) {
+		if exp, ok := (*claims)["exp"].(float64)
+		ok {
+			if time.Now().Unix() > int64(exp) {
 				return fmt.Errorf("token has expired")
 			}
 		} else {
 			return fmt.Errorf("expiration claim missing or invalid")
 		}
 
-		if email, ok := (*claims)["email"].(string); ok {
+		if email, ok := (*claims)["email"].(string)
+		ok {
 			if email == "" {
 				return fmt.Errorf("email claim is empty")
 			}
@@ -126,21 +127,20 @@ func (us *UserService) VerifyToken(tokenString string) error {
 			return fmt.Errorf("email claim missing or invalid")
 		}
 	}
-	return nil
-}
 
-func (us *UserService) VerifyOtp(userID string, code uint) error {
-    otp, err := us.OTPRepo.FindByUserID(userID)
+	otp, err := us.OTPRepo.FindByUserID(userID)
     if err != nil {
         return fmt.Errorf("failed to find OTP: %w", err)
-    }
-    if otp.Code != code {
+
+    } else if time.Now().After(otp.CreatedAt.Add(5 * time.Minute)) {
+		return fmt.Errorf("otp is timeout")
+
+	} else if otp.Code != code && !otp.Verified {
         return fmt.Errorf("invalid OTP code")
     }
-    // Proceed with email verification
-    return nil
-}
 
+	return nil
+}
 // step 1: verify jwt signiture
 // step 2: get user last otp code
 // step 3: compare otp codes

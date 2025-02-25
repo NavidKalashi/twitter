@@ -21,9 +21,11 @@ func (or *OTPRepository) Create(user *models.User, code uint) error {
 	}
 	return or.db.Create(&otp).Error
 }
+
 func (r *OTPRepository) FindByUserID(userID string) (*models.OTP, error) {
     var otp models.OTP
-    if err := r.db.Where("user_id = ?", userID).First(&otp).Error; err != nil {
+    if err := r.db.Where("user_id = ?", userID).First(&otp).Error
+	err != nil {
         return nil, err
     }
     return &otp, nil
