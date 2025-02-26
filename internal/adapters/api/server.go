@@ -20,12 +20,11 @@ func NewServer(userController *controller.UserController) *Server {
 }
 
 func (s *Server) AddRoutes(userController *controller.UserController) {
-	s.engine.POST("/register", userController.CreateUserController)
-	s.engine.GET("/user/:id", userController.GetUserController)
-	s.engine.DELETE("/user/:id", userController.DeleteUserController)
-	s.engine.PUT("/user/update", userController.UpdateUserController)
-
-	s.engine.POST("/verify/:id", userController.VerifyUserController)
+	s.engine.POST("/register", userController.RegisterController)
+	s.engine.POST("/verify/:id", userController.VerifyController)
+	s.engine.GET("/user/:id", userController.GetController)
+	s.engine.DELETE("/user/:id", userController.UpdateController)
+	s.engine.PUT("/user/update", userController.DeleteController)
 }
 
 func (s *Server) Start() {

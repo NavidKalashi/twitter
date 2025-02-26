@@ -18,7 +18,7 @@ func NewUserController(userService *service.UserService) *UserController {
 	return &UserController{userService: userService}
 }
 
-func (uc *UserController) CreateUserController(c *gin.Context) {
+func (uc *UserController) RegisterController(c *gin.Context) {
 	var user models.User
 	var otp models.OTP
 
@@ -37,7 +37,28 @@ func (uc *UserController) CreateUserController(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": tokenString})
 }
 
-func (uc *UserController) GetUserController(c *gin.Context) {
+func (uc *UserController) VerifyController(c *gin.Context) {
+	userID := c.Param("id")
+	var json struct {
+		Token string `json:"token"`
+		Code  uint   `json:"code"`
+	}
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := uc.userService.Verify(json.Token, userID, json.Code)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "your email verified"})
+}
+
+func (uc *UserController) GetController(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
@@ -58,7 +79,7 @@ func (uc *UserController) GetUserController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
-func (uc *UserController) UpdateUserController(c *gin.Context) {
+func (uc *UserController) UpdateController(c *gin.Context) {
 	var user models.User
 
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -73,7 +94,7 @@ func (uc *UserController) UpdateUserController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
 }
 
-func (uc *UserController) DeleteUserController(c *gin.Context) {
+func (uc *UserController) DeleteController(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
@@ -88,25 +109,4 @@ func (uc *UserController) DeleteUserController(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
-}
-
-func (uc *UserController) VerifyUserController(c *gin.Context) {
-	userID := c.Param("id")
-	var json struct {
-		Token string `json:"token"`
-		Code  uint   `json:"code"`
-	}
-
-	if err := c.ShouldBindJSON(&json); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	err := uc.userService.VerifyToken(json.Token, userID, json.Code)
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "your email verified"})
 }
