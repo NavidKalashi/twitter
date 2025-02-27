@@ -109,7 +109,7 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) erro
 		return fmt.Errorf("failed to find OTP: %w", err)
 	}
 
-	expOtp := otp.CreatedAt.Add(45 * time.Second)
+	expOtp := otp.CreatedAt.Add(2 * time.Minute)
 	currentTime := time.Now()
 
 	if currentTime.Unix() > expOtp.Unix() {
