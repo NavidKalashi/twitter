@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
@@ -20,7 +21,6 @@ func NewUserController(userService *service.UserService) *UserController {
 
 func (uc *UserController) RegisterController(c *gin.Context) {
 	var user models.User
-	var otp models.OTP
 
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
@@ -28,7 +28,7 @@ func (uc *UserController) RegisterController(c *gin.Context) {
 		return
 	}
 
-	tokenString, err := uc.userService.Register(&user, &otp)
+	tokenString, err := uc.userService.Register(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -56,6 +56,24 @@ func (uc *UserController) VerifyController(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "your email verified"})
+}
+
+func (uc *UserController) ResendController(c *gin.Context) {
+	userIDStr := c.Param("id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID"})
+		return
+	}
+
+	err = uc.userService.Resend(userID)
+	if err != nil {
+		log.Printf("Failed to resend OTP: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to resend OTP"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "code sent successfully"})
 }
 
 func (uc *UserController) GetController(c *gin.Context) {

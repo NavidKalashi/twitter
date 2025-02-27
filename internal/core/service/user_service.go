@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
@@ -32,7 +31,7 @@ func generateOTP() uint {
 	return uint(rand.Intn(900000) + 100000)
 }
 
-func (us *UserService) Register(user *models.User, otp *models.OTP) (string, error) {
+func (us *UserService) Register(user *models.User) (string, error) {
 
 	// check email and username not exist
 	email, err := us.UserRepo.EmailExist(user.Email)
@@ -58,7 +57,7 @@ func (us *UserService) Register(user *models.User, otp *models.OTP) (string, err
 	us.OTPRepo.Create(user, code)
 
 	// generate jwt token
-	token, err := jwtPackage.GenerateJwt(user.Email, user.Username)
+	token, err := jwtPackage.GenerateJwt(user.Email)
 	if err != nil {
 		return "", errors.New("token not created")
 	}
@@ -110,14 +109,10 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) erro
 		return fmt.Errorf("failed to find OTP: %w", err)
 	}
 
-	expOtp := otp.CreatedAt.Add(1 * time.Minute)
+	expOtp := otp.CreatedAt.Add(45 * time.Second)
 	currentTime := time.Now()
 
-	log.Println("currenttime", currentTime)
-	log.Println("expOtp", expOtp)
-	log.Println("expOtp", otp.CreatedAt)
-
-	if currentTime.After(expOtp) {
+	if currentTime.Unix() > expOtp.Unix() {
 		return fmt.Errorf("OTP has expired")
 	}
 
@@ -130,6 +125,17 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) erro
 		}
 	}
 
+	return nil
+}
+
+func (us *UserService) Resend(id uuid.UUID) error {
+	userByID, err := us.UserRepo.Get(id)
+	if err != nil {
+		return errors.New("user not found")
+	}
+	code := generateOTP()
+	us.OTPRepo.Create(userByID, code)
+	us.emailService.SendOTP(userByID.Email, code)
 	return nil
 }
 
