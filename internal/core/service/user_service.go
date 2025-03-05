@@ -1,6 +1,7 @@
 package service
 
 import (
+	// "context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -14,15 +15,19 @@ import (
 )
 
 type UserService struct {
-	UserRepo     ports.UserRepository
-	OTPRepo      ports.OTPRepository
-	emailService EmailService
+	UserRepo         ports.User
+	OTPRepo          ports.OTP
+	RefreshTokenRepo ports.RefreshToken
+	AccessTokenRepo  ports.AccessToken
+	emailService     EmailService
 }
 
-func NewUserService(UserRepo ports.UserRepository, OTPRepo ports.OTPRepository) *UserService {
+func NewUserService(UserRepo ports.User, OTPRepo ports.OTP, RefreshTokenRepo ports.RefreshToken, AccessTokenRepo ports.AccessToken) *UserService {
 	return &UserService{
-		UserRepo: UserRepo,
-		OTPRepo:  OTPRepo,
+		UserRepo:         UserRepo,
+		OTPRepo:          OTPRepo,
+		RefreshTokenRepo: RefreshTokenRepo,
+		AccessTokenRepo:  AccessTokenRepo,
 	}
 }
 
@@ -30,6 +35,8 @@ func generateOTP() uint {
 	rand.Seed(time.Now().UnixNano())
 	return uint(rand.Intn(900000) + 100000)
 }
+
+var secretKey = []byte("your_secret_key")
 
 func (us *UserService) Register(user *models.User) (string, error) {
 
@@ -68,8 +75,7 @@ func (us *UserService) Register(user *models.User) (string, error) {
 	return token, nil
 }
 
-func (us *UserService) Verify(tokenString string, userID string, code uint) error {
-	var secretKey = []byte("your_secret_key")
+func (us *UserService) Verify(tokenString string, userID string, code uint) (string, string, error) {
 	claims := &jwt.MapClaims{}
 
 	// token verify
@@ -81,24 +87,24 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) erro
 	})
 
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	if token.Valid {
 		if exp, ok := (*claims)["exp"].(float64); ok {
 			if time.Now().Unix() > int64(exp) {
-				return fmt.Errorf("token has expired")
+				return "", "", fmt.Errorf("token has expired")
 			}
 		} else {
-			return fmt.Errorf("expiration claim missing or invalid")
+			return "", "", fmt.Errorf("expiration claim missing or invalid")
 		}
 
 		if email, ok := (*claims)["email"].(string); ok {
 			if email == "" {
-				return fmt.Errorf("email claim is empty")
+				return "", "", fmt.Errorf("email claim is empty")
 			}
 		} else {
-			return fmt.Errorf("email claim missing or invalid")
+			return "", "", fmt.Errorf("email claim missing or invalid")
 		}
 	}
 
@@ -106,26 +112,73 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) erro
 	otp, err := us.OTPRepo.FindByUserID(userID)
 
 	if err != nil {
-		return fmt.Errorf("failed to find OTP: %w", err)
+		return "", "", fmt.Errorf("failed to find OTP: %w", err)
 	}
 
 	expOtp := otp.CreatedAt.Add(2 * time.Minute)
 	currentTime := time.Now()
 
 	if currentTime.Unix() > expOtp.Unix() {
-		return fmt.Errorf("OTP has expired")
+		return "", "", fmt.Errorf("OTP has expired")
 	}
 
 	if otp.Code != code {
-		return fmt.Errorf("invalid OTP code")
+		return "", "", fmt.Errorf("invalid OTP code")
 	} else {
 		otp.Verified = true
 		if err := us.OTPRepo.Verified(otp); err != nil {
-			return fmt.Errorf("failed to change otp status")
+			return "", "", fmt.Errorf("failed to change otp status")
 		}
 	}
 
-	return nil
+	// refresh token and access token
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return "", "", errors.New("invalid user ID format")
+	}
+	refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(userID)
+	if err != nil {
+		return "", "", errors.New("refresh token not created")
+	}
+
+	us.RefreshTokenRepo.Create(userUUID, refreshToken)
+	us.AccessTokenRepo.Set(userID, accessToken)
+
+	return refreshToken, accessToken, nil
+}
+
+func (us *UserService) NewAccessToken(refreshTokenString string, userID string) (string, error) {
+	refreshToken, err := jwt.Parse(refreshTokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return secretKey, nil
+	})
+
+	if err != nil || !refreshToken.Valid {
+		return "", fmt.Errorf("invalid refres token")
+	}
+
+	// generate new access token
+	if claims, ok := refreshToken.Claims.(jwt.MapClaims); ok && refreshToken.Valid {
+		userID := claims["user_id"].(string)
+
+		newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"user_id": userID,
+			"exp": time.Now().Add(time.Minute * 15).Unix(),
+		})
+
+		newAccessTokenString, err := newAccessToken.SignedString(secretKey)
+		if err != nil {
+			return "", err
+		}
+		
+		us.AccessTokenRepo.Set(userID, newAccessTokenString)
+
+		return newAccessTokenString, nil
+	} else {
+		return "", errors.New("invalid access token")
+	}
 }
 
 func (us *UserService) Resend(id uuid.UUID) error {

@@ -49,13 +49,31 @@ func (uc *UserController) VerifyController(c *gin.Context) {
 		return
 	}
 
-	err := uc.userService.Verify(json.Token, userID, json.Code)
+	refreshToken, accessToken, err := uc.userService.Verify(json.Token, userID, json.Code)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "your email verified"})
+	c.JSON(http.StatusOK, gin.H{"Access Token": accessToken, "Refresh Token": refreshToken})
+}
+
+func (uc *UserController) RefreshController(c *gin.Context) {
+	userID := c.Param("id")
+	var json struct {
+		Refresh string `json:"refresh_token"`
+	}
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	newAcessToken, err := uc.userService.NewAccessToken(json.Refresh, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate new access token"})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"new_access_token": newAcessToken})
 }
 
 func (uc *UserController) ResendController(c *gin.Context) {

@@ -10,7 +10,7 @@ type OTPRepository struct {
 	db *gorm.DB
 }
 
-func NewOTPRepository(db *gorm.DB) ports.OTPRepository{
+func NewOTPRepository(db *gorm.DB) ports.OTP{
 	return &OTPRepository{db: db}
 }
 

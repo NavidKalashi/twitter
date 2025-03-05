@@ -16,11 +16,16 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		Name     string `mapstructure:"name"`
 	} `mapstructure:"db"`
+	Redis struct {
+		Addr     string `mapstructure:"addr"`
+		Password string `mapstructure:"password"`
+		DB       int    `mapstructure:"db"`
+	} `mapstructure:"redis"`
 }
 
 var Cfg Config
 
-func LoadConfig() (*Config, error){
+func LoadConfig() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("internal/config")
@@ -29,7 +34,6 @@ func LoadConfig() (*Config, error){
 		log.Fatalf("error reading config file, %s", err)
 	}
 
-	
 	if err := viper.Unmarshal(&Cfg); err != nil {
 		log.Fatalf("unable to decode into struct, %v", err)
 	}
