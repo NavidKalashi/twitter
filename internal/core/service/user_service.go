@@ -110,7 +110,6 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) (str
 
 	// check otp code
 	otp, err := us.OTPRepo.FindByUserID(userID)
-
 	if err != nil {
 		return "", "", fmt.Errorf("failed to find OTP: %w", err)
 	}
@@ -141,8 +140,16 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) (str
 		return "", "", errors.New("refresh token not created")
 	}
 
-	us.RefreshTokenRepo.Create(userUUID, refreshToken)
+	err = us.RefreshTokenRepo.Create(userUUID, refreshToken)
+	if err != nil {
+		return "", "", err
+	}
+
 	us.AccessTokenRepo.Set(userID, accessToken)
+	err = us.AccessTokenRepo.Set(userID, accessToken)
+	if err != nil {
+		return "", "", err
+	}
 
 	return refreshToken, accessToken, nil
 }
@@ -165,14 +172,14 @@ func (us *UserService) NewAccessToken(refreshTokenString string, userID string) 
 
 		newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"user_id": userID,
-			"exp": time.Now().Add(time.Minute * 15).Unix(),
+			"exp":     time.Now().Add(time.Minute * 15).Unix(),
 		})
 
 		newAccessTokenString, err := newAccessToken.SignedString(secretKey)
 		if err != nil {
 			return "", err
 		}
-		
+
 		us.AccessTokenRepo.Set(userID, newAccessTokenString)
 
 		return newAccessTokenString, nil
@@ -208,6 +215,7 @@ func (us *UserService) Update(user *models.User) error {
 	if user.Email == "" {
 		user.Email = existingUser.Email
 	}
+	user.UpdatedAt = time.Now()
 
 	return us.UserRepo.Update(user)
 }

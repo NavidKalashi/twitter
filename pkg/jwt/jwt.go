@@ -6,9 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte("your_secret_key")
-
 func GenerateJwt(email string) (string, error) {
+	var secretKey = []byte("your_secret_key")
 	claims := jwt.MapClaims{
 		"email": email,
 		"exp":  time.Now().Add(20 * time.Minute).Unix(),
@@ -16,7 +15,7 @@ func GenerateJwt(email string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString(secretKey)
+	signedToken, err := token.SignedString(&secretKey)
 	if err != nil {
 		return "", err
 	}
@@ -25,12 +24,13 @@ func GenerateJwt(email string) (string, error) {
 }
 
 func GenerateAccessAndRefresh(userID string) (string, string, error) {
+	var secretKey = []byte("your_secret_key")
 	// access token
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"exp":      time.Now().Add(time.Minute * 15).Unix(),
 	   })
-	accessTokenString, err := accessToken.SignedString(secretKey)
+	accessTokenString, err := accessToken.SignedString(&secretKey)
 	if err != nil {
 		return "", "", err
 	}
@@ -40,7 +40,7 @@ func GenerateAccessAndRefresh(userID string) (string, string, error) {
 		"user_id": userID,
 		"exp":      time.Now().Add(time.Hour * 24 * 7).Unix(),
 	   })
-	refreshTokenString, err := refreshToken.SignedString(secretKey)
+	refreshTokenString, err := refreshToken.SignedString(&secretKey)
 	if err != nil {
 		return "", "", err
 	}

@@ -51,11 +51,11 @@ func (uc *UserController) VerifyController(c *gin.Context) {
 
 	refreshToken, accessToken, err := uc.userService.Verify(json.Token, userID, json.Code)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"Access Token": accessToken, "Refresh Token": refreshToken})
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 }
 
 func (uc *UserController) RefreshController(c *gin.Context) {

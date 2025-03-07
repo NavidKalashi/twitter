@@ -13,3 +13,7 @@ redis:
   addr: "localhost:6379"
   password: ""
   db: 0
+
+apikey: "re_MzT3hsTe_F4JTUCmausSEMkipw2tC7QwT"
+
+secretkey: "your_secret_key"

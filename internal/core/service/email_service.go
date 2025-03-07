@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NavidKalashi/twitter/internal/config"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
 	"github.com/resend/resend-go/v2"
 )
 
 type EmailService struct {
 	emailServ ports.EmailService
+	cfg       *config.Config
 }
 
 func NewEmailService(emailServ ports.EmailService) *EmailService {
@@ -17,25 +19,24 @@ func NewEmailService(emailServ ports.EmailService) *EmailService {
 }
 
 func (es *EmailService) SendOTP(to string, code uint) error {
-	apiKey := "re_MzT3hsTe_F4JTUCmausSEMkipw2tC7QwT"
+	apiKey := es.cfg.Apikey
 
-    client := resend.NewClient(apiKey)
+	client := resend.NewClient(apiKey)
 
-    
-    params := &resend.SendEmailRequest{
-        From:    "Acme <onboarding@resend.dev>",
-        To:      []string{"kalashinavid@gmail.com"},
-        Html:    "<strong>your verification code: </strong>" + fmt.Sprintf("%d", code),
-        Subject: "hello from twitter",
-    }
+	params := &resend.SendEmailRequest{
+		From:    "Acme <onboarding@resend.dev>",
+		To:      []string{"kalashinavid@gmail.com"},
+		Html:    "<strong>your verification code: </strong>" + fmt.Sprintf("%d", code),
+		Subject: "hello from twitter",
+	}
 
-    claims, err := client.Emails.Send(params)
-    if err != nil {
-        return err
-    }
-    if claims != nil {
-        return errors.New("email not sent")
-    }
-    
+	claims, err := client.Emails.Send(params)
+	if err != nil {
+		return err
+	}
+	if claims != nil {
+		return errors.New("email not sent")
+	}
+
 	return nil
 }
