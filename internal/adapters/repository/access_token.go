@@ -22,3 +22,9 @@ func (r *AccessTokenRepository) Set(userID string, token string) error {
 	key := fmt.Sprintf("access_token_%s", userID)
 	return r.redis.Set(ctx, key, token, 15 * time.Minute).Err()
 }
+
+func (r *AccessTokenRepository) Delete(userID string) error {
+	ctx := context.Background()
+	key := fmt.Sprintf("access_token_%s", userID)
+	return r.redis.Del(ctx, key).Err()
+}

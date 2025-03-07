@@ -33,4 +33,5 @@ type RefreshToken interface {
 
 type AccessToken interface {
 	Set(userID string, accessToken string) error
+	Delete(userID string) error
 }

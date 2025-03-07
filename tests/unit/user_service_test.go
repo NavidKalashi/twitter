@@ -57,6 +57,11 @@ func (mo *MockAccessTokenRepo) Set(userID string, accessToken string) error {
 	return args.Error(0)
 }
 
+func (mo *MockAccessTokenRepo) Delete(userID string) error {
+	args := mo.Called(userID)
+	return args.Error(0)
+}
+
 type UserService struct {
 	OTPRepo          ports.OTP
 	RefreshTokenRepo ports.RefreshToken

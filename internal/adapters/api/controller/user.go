@@ -76,6 +76,18 @@ func (uc *UserController) RefreshController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"new_access_token": newAcessToken})
 }
 
+func (uc *UserController) LogoutController(c *gin.Context) {
+	userID := c.Param("id")
+
+	err := uc.userService.Logout(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "fail to logout"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+}
+
 func (uc *UserController) ResendController(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := uuid.Parse(userIDStr)

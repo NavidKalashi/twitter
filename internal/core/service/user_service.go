@@ -188,6 +188,10 @@ func (us *UserService) NewAccessToken(refreshTokenString string, userID string) 
 	}
 }
 
+func (us *UserService) Logout(userID string) error {
+	return us.AccessTokenRepo.Delete(userID)
+}
+
 func (us *UserService) Resend(id uuid.UUID) error {
 	userByID, err := us.UserRepo.Get(id)
 	if err != nil {
