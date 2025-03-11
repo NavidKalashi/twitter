@@ -7,12 +7,13 @@ import (
 
 type User interface {
 	Register(user *models.User) error
-	Get(id uuid.UUID) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
-	Update(user *models.User) error
-	Delete(id uuid.UUID) error
+	GetByID(userID string) (*models.User, error)
+	Edit(user *models.User) error
+	Delete(userID uuid.UUID) error
 	EmailExist(email string) (*models.User, error)
 	UsernameExist(username string) (*models.User, error)
+	Verified(user *models.User, sit bool) error
 	// GetUsers() ([]models.User, error)
 }
 
@@ -22,16 +23,11 @@ type EmailService interface {
 }
 
 type OTP interface {
-	Create(user *models.User, code uint) error
-	FindByUserID(userID string) (*models.OTP, error)
-	Verified(otp *models.OTP) error
+	Set(email string, code uint) error
+	Get(email string) (uint, error)
 }
 
 type RefreshToken interface {
 	Create(userID uuid.UUID, refreshToken string) error
-}
-
-type AccessToken interface {
-	Set(userID string, accessToken string) error
-	Delete(userID string) error
+	Delete(userID uuid.UUID) error
 }

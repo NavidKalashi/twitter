@@ -21,8 +21,6 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		DB       int    `mapstructure:"db"`
 	} `mapstructure:"redis"`
-	Apikey    string `mapstructure:"apikey"`
-	SecretKey string `mapstructure:"secretkey"`
 }
 
 var Cfg Config

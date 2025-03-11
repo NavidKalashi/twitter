@@ -7,29 +7,31 @@ import (
 )
 
 type Server struct {
-	userController  *controller.UserController
-	engine          *gin.Engine
+	userController *controller.UserController
+	engine         *gin.Engine
 }
 
-func NewServer(userController *controller.UserController) *Server {
+func NewServer(engine *gin.Engine, userController *controller.UserController) *Server {
 	server := &Server{
-		userController:  userController,
+		userController: userController,
+		engine: engine,
 	}
-	server.engine = gin.Default()
 	server.AddRoutes(userController)
 	return server
 }
 
 func (s *Server) AddRoutes(userController *controller.UserController) {
+	authRoutes := s.engine.Group("/protected")
 	s.engine.POST("/register", userController.RegisterController)
-	s.engine.POST("/verify-email/:id", userController.VerifyController)
+	s.engine.POST("/verify-email", userController.VerifyController)
 	s.engine.POST("/refresh", userController.RefreshController)
-	s.engine.POST("/send-code-again/:id", userController.ResendController)
-	s.engine.DELETE("/logout/:id", userController.LogoutController)
-	s.engine.GET("/users", middleware.AuthMiddleware())
-	s.engine.GET("/user/:id", userController.GetController)
-	s.engine.DELETE("/user/:id", userController.UpdateController)
-	s.engine.PUT("/user/update", userController.DeleteController)
+	s.engine.POST("/send-code-again", userController.ResendController)
+	authRoutes.Use(middleware.AuthMiddleware())
+	{
+		authRoutes.GET("/profile", userController.GetController)
+		authRoutes.DELETE("/logout", userController.LogoutController)
+		authRoutes.PUT("/edit", userController.EditController)
+	}
 }
 
 func (s *Server) Start() {

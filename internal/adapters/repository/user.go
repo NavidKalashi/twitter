@@ -39,25 +39,23 @@ func (r *UserRepository) UsernameExist(username string) (*models.User, error) {
 	return &user, result.Error
 }
 
-func (r *UserRepository) Get(id uuid.UUID) (*models.User, error) {
-	var user models.User
-	if err := r.db.First(&user, id).Error
-	err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	var user models.User
-	if err := r.db.First(&user, email).Error
-	err != nil {
+	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *UserRepository) Update(user *models.User) error {
+func (r *UserRepository) GetByID(userID string) (*models.User, error) {
+	var user models.User
+	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) Edit(user *models.User) error {
 	result := r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(user)
 	if result.Error != nil {
 		return result.Error
@@ -68,11 +66,9 @@ func (r *UserRepository) Update(user *models.User) error {
 	return nil
 }
 
-func (r *UserRepository) Delete(id uuid.UUID) error {
+func (r *UserRepository) Delete(userID uuid.UUID) error {
 	var user models.User
-	var otp models.OTP
-	r.db.Where("user_id = ?", id).Delete(&otp)
-	result := r.db.Delete(&user, id)
+	result := r.db.Delete(&user, userID)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -82,4 +78,8 @@ func (r *UserRepository) Delete(id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (r *UserRepository) Verified(user *models.User, sit bool) error {
+    return r.db.Model(&user).Updates(models.User{OTPVerified: sit}).Error
 }

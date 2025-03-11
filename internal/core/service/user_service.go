@@ -18,16 +18,14 @@ type UserService struct {
 	UserRepo         ports.User
 	OTPRepo          ports.OTP
 	RefreshTokenRepo ports.RefreshToken
-	AccessTokenRepo  ports.AccessToken
 	emailService     EmailService
 }
 
-func NewUserService(UserRepo ports.User, OTPRepo ports.OTP, RefreshTokenRepo ports.RefreshToken, AccessTokenRepo ports.AccessToken) *UserService {
+func NewUserService(UserRepo ports.User, OTPRepo ports.OTP, RefreshTokenRepo ports.RefreshToken) *UserService {
 	return &UserService{
 		UserRepo:         UserRepo,
 		OTPRepo:          OTPRepo,
 		RefreshTokenRepo: RefreshTokenRepo,
-		AccessTokenRepo:  AccessTokenRepo,
 	}
 }
 
@@ -61,7 +59,7 @@ func (us *UserService) Register(user *models.User) (string, error) {
 
 	// create otp for new user
 	code := generateOTP()
-	us.OTPRepo.Create(user, code)
+	us.OTPRepo.Set(user.Email, code)
 
 	// generate jwt token
 	token, err := jwtPackage.GenerateJwt(user.Email)
@@ -75,7 +73,7 @@ func (us *UserService) Register(user *models.User) (string, error) {
 	return token, nil
 }
 
-func (us *UserService) Verify(tokenString string, userID string, code uint) (string, string, error) {
+func (us *UserService) Verify(tokenString string, email string, code uint) (string, string, error) {
 	claims := &jwt.MapClaims{}
 
 	// token verify
@@ -108,45 +106,32 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) (str
 		}
 	}
 
+	user, err := us.UserRepo.GetByEmail(email)
+	if err != nil {
+		return "", "", err
+	}
+
 	// check otp code
-	otp, err := us.OTPRepo.FindByUserID(userID)
+	otp, err := us.OTPRepo.Get(user.Email)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to find OTP: %w", err)
 	}
 
-	expOtp := otp.CreatedAt.Add(2 * time.Minute)
-	currentTime := time.Now()
-
-	if currentTime.Unix() > expOtp.Unix() {
-		return "", "", fmt.Errorf("OTP has expired")
-	}
-
-	if otp.Code != code {
+	if otp != code {
 		return "", "", fmt.Errorf("invalid OTP code")
 	} else {
-		otp.Verified = true
-		if err := us.OTPRepo.Verified(otp); err != nil {
+		if err := us.UserRepo.Verified(user, true); err != nil {
 			return "", "", fmt.Errorf("failed to change otp status")
 		}
 	}
 
 	// refresh token and access token
-	userUUID, err := uuid.Parse(userID)
-	if err != nil {
-		return "", "", errors.New("invalid user ID format")
-	}
-	refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(userID)
+	refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
 	if err != nil {
 		return "", "", errors.New("refresh token not created")
 	}
 
-	err = us.RefreshTokenRepo.Create(userUUID, refreshToken)
-	if err != nil {
-		return "", "", err
-	}
-
-	us.AccessTokenRepo.Set(userID, accessToken)
-	err = us.AccessTokenRepo.Set(userID, accessToken)
+	err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
@@ -154,7 +139,7 @@ func (us *UserService) Verify(tokenString string, userID string, code uint) (str
 	return refreshToken, accessToken, nil
 }
 
-func (us *UserService) NewAccessToken(refreshTokenString string, userID string) (string, error) {
+func (us *UserService) NewAccessToken(refreshTokenString string) (string, error) {
 	refreshToken, err := jwt.Parse(refreshTokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -168,19 +153,24 @@ func (us *UserService) NewAccessToken(refreshTokenString string, userID string) 
 
 	// generate new access token
 	if claims, ok := refreshToken.Claims.(jwt.MapClaims); ok && refreshToken.Valid {
-		userID := claims["user_id"].(string)
+		email := claims["email"].(string)
+
+		user, err := us.UserRepo.GetByEmail(email)
+		if err != nil {
+			return "", fmt.Errorf("fail to find user")
+		}
 
 		newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id": userID,
-			"exp":     time.Now().Add(time.Minute * 15).Unix(),
+			"username": user.Username,
+			"email": email,
+			"sub":   user.ID,
+			"exp":   time.Now().Add(time.Minute * 15).Unix(),
 		})
 
 		newAccessTokenString, err := newAccessToken.SignedString(secretKey)
 		if err != nil {
 			return "", err
 		}
-
-		us.AccessTokenRepo.Set(userID, newAccessTokenString)
 
 		return newAccessTokenString, nil
 	} else {
@@ -189,26 +179,50 @@ func (us *UserService) NewAccessToken(refreshTokenString string, userID string) 
 }
 
 func (us *UserService) Logout(userID string) error {
-	return us.AccessTokenRepo.Delete(userID)
+	user, err := us.GetByID(userID)
+    if err != nil {
+        return fmt.Errorf("failed to get user by id: %w", err)
+    }
+
+    err = us.UserRepo.Verified(user, false)
+    if err != nil {
+        return fmt.Errorf("failed to unverify user: %w", err)
+    }
+
+    err = us.RefreshTokenRepo.Delete(user.ID)
+    if err != nil {
+        return fmt.Errorf("failed to delete refresh token: %w", err)
+    }
+
+    return nil
 }
 
-func (us *UserService) Resend(id uuid.UUID) error {
-	userByID, err := us.UserRepo.Get(id)
-	if err != nil {
-		return errors.New("user not found")
-	}
+func (us *UserService) Resend(email string) (string, error) {
 	code := generateOTP()
-	us.OTPRepo.Create(userByID, code)
-	us.emailService.SendOTP(userByID.Email, code)
-	return nil
+	user, err := us.UserRepo.GetByEmail(email)
+	if err != nil {
+		return "", err
+	}
+	us.OTPRepo.Set(user.Email, code)
+	us.emailService.SendOTP(user.Email, code)
+
+	token, err := jwtPackage.GenerateJwt(user.Email)
+	if err != nil {
+		return "", errors.New("token not created")
+	}
+	return token, nil
 }
 
-func (us *UserService) Get(id uuid.UUID) (*models.User, error) {
-	return us.UserRepo.Get(id)
+func (us *UserService) GetByEmail(email string) (*models.User, error) {
+	return us.UserRepo.GetByEmail(email)
 }
 
-func (us *UserService) Update(user *models.User) error {
-	existingUser, err := us.UserRepo.Get(user.ID)
+func (us *UserService) GetByID(userID string) (*models.User, error) {
+	return us.UserRepo.GetByID(userID)
+}
+
+func (us *UserService) Edit(user *models.User) error {
+	existingUser, err := us.UserRepo.GetByEmail(user.Email)
 	if err != nil {
 		return errors.New("user not found")
 	}
@@ -221,7 +235,7 @@ func (us *UserService) Update(user *models.User) error {
 	}
 	user.UpdatedAt = time.Now()
 
-	return us.UserRepo.Update(user)
+	return us.UserRepo.Edit(user)
 }
 
 func (us *UserService) Delete(id uuid.UUID) error {

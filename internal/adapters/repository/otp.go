@@ -1,36 +1,50 @@
 package repository
 
 import (
-	"github.com/NavidKalashi/twitter/internal/core/domain/models"
+	"context"
+	"fmt"
+	"regexp"
+	"strconv"
+	"time"
+
 	"github.com/NavidKalashi/twitter/internal/core/ports"
-	"gorm.io/gorm"
+	"github.com/redis/go-redis/v9"
 )
 
 type OTPRepository struct {
-	db *gorm.DB
+	redis *redis.Client
 }
 
-func NewOTPRepository(db *gorm.DB) ports.OTP{
-	return &OTPRepository{db: db}
+func NewOTPRepository(redis *redis.Client) ports.OTP {
+	return &OTPRepository{redis: redis}
 }
 
-func (or *OTPRepository) Create(user *models.User, code uint) error {
-	otp := models.OTP{
-		UserID: user.ID,
-		Code:   code,
+func (or *OTPRepository) Set(email string, code uint) error {
+	ctx := context.Background()
+	key := fmt.Sprintf("otp_%s", email)
+	return or.redis.Set(ctx, key, code, 2 * time.Minute).Err()
+}
+
+func (or *OTPRepository) Get(email string) (uint, error) {
+	ctx := context.Background()
+	key := fmt.Sprintf("otp_%s", email)
+
+	otpStr, err := or.redis.Get(ctx, key).Result()
+	if err == redis.Nil {
+			return 0, fmt.Errorf("OTP not found")
+	} else if err != nil {
+			return 0, err
 	}
-	return or.db.Create(&otp).Error
-}
 
-func (r *OTPRepository) FindByUserID(userID string) (*models.OTP, error) {
-    var otp models.OTP
-    if err := r.db.Where("user_id = ?", userID).Last(&otp).Error
-	err != nil {
-        return nil, err
-    }
-    return &otp, nil
-}
+	// Validate OTP format
+	if !regexp.MustCompile(`^\d+$`).MatchString(otpStr) {
+			return 0, fmt.Errorf("invalid OTP format: %s", otpStr)
+	}
 
-func (repo *OTPRepository) Verified(otp *models.OTP) error {
-    return repo.db.Save(&otp).Error
+	otpUint64, err := strconv.ParseUint(otpStr, 10, 32)
+	if err != nil {
+			return 0, fmt.Errorf("failed to parse OTP: %w", err)
+	}
+
+	return uint(otpUint64), nil
 }

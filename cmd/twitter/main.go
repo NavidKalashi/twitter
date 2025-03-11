@@ -10,6 +10,7 @@ import (
 	"github.com/NavidKalashi/twitter/internal/adapters/repository"
 	"github.com/NavidKalashi/twitter/internal/config"
 	"github.com/NavidKalashi/twitter/internal/core/service"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -29,19 +30,18 @@ func main() {
 	}
 
 	// otp
-	otpRepository := repository.NewOTPRepository(db.GetDB())
+	otpRepository := repository.NewOTPRepository(redis.GetRedis())
 	
 	// refresh token
 	refreshTokenRepository := repository.NewRefreshTokenRepository(db.GetDB())
 
-	// access token
-	accessTokenRepository := repository.NewAccessTokenRepository(redis.GetRedis())
-	
 	// user
 	userRepository := repository.NewUserRepository(db.GetDB())
-	userService := service.NewUserService(userRepository, otpRepository, refreshTokenRepository, accessTokenRepository)
+	userService := service.NewUserService(userRepository, otpRepository, refreshTokenRepository)
 	userController := controller.NewUserController(userService)
 
-	server := api.NewServer(userController)
+	r := gin.Default()
+
+	server := api.NewServer(r, userController)
 	server.Start()
 }
