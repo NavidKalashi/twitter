@@ -9,7 +9,7 @@ import (
 
 var secretKey = []byte("your_secret_key")
 
-func GenerateJwt(email string) (string, error) {
+func OTPToken(email string) (string, error) {
 	claims := jwt.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(20 * time.Minute).Unix(),

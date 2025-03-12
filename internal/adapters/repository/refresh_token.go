@@ -23,6 +23,11 @@ func (rt *RefreshTokenRepository) Create(userID uuid.UUID, refreshToken string) 
 	return rt.db.Create(&token).Error
 }
 
+func (rt *RefreshTokenRepository) Get(userID uuid.UUID) error {
+	var refreshToken models.RefreshToken
+	return rt.db.Where("user_id = ?", userID).First(&refreshToken).Error
+}
+
 func (rt *RefreshTokenRepository) Delete(userID uuid.UUID) error {
 	var refreshToken models.RefreshToken
 

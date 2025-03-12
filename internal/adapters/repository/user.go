@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
@@ -17,8 +18,21 @@ func NewUserRepository(db *gorm.DB) ports.User {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Register(user *models.User) error {
-    return r.db.Create(user).Error
+func (r *UserRepository) Register(username string, name string, email string, hashPass string, bio string, birthday time.Time) error {
+    user := models.User{
+		Username: username,
+		Name:     name,
+		Email:    email,
+		Password: hashPass,
+		Bio:      bio,
+		Birthday: birthday,
+	}
+	
+	result := r.db.Create(&user)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
 func (r *UserRepository) EmailExist(email string) (*models.User, error) {

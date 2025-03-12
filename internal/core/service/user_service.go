@@ -12,6 +12,7 @@ import (
 	jwtPackage "github.com/NavidKalashi/twitter/pkg/jwt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
@@ -29,51 +30,61 @@ func NewUserService(UserRepo ports.User, OTPRepo ports.OTP, RefreshTokenRepo por
 	}
 }
 
+var secretKey = []byte("your_secret_key")
+
 func generateOTP() uint {
 	rand.Seed(time.Now().UnixNano())
 	return uint(rand.Intn(900000) + 100000)
 }
 
-var secretKey = []byte("your_secret_key")
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
 
-func (us *UserService) Register(user *models.User) (string, error) {
+func (us *UserService) Register(username string, name string, email string, password string, bio string, birthday time.Time) (string, error) {
 
 	// check email and username not exist
-	email, err := us.UserRepo.EmailExist(user.Email)
+	existEmail, err := us.UserRepo.EmailExist(email)
 	if err != nil {
 		return "", err
 	}
-	if email != nil {
+	if existEmail != nil {
 		return "", errors.New("email already exist")
 	}
 
-	username, err := us.UserRepo.UsernameExist(user.Username)
+	existUsername, err := us.UserRepo.UsernameExist(username)
 	if err != nil {
 		return "", err
 	}
-	if username != nil {
+	if existUsername != nil {
 		return "", errors.New("username already exist")
 	}
 
-	us.UserRepo.Register(user)
+	hashPass, err := HashPassword(password)
+	if err != nil {
+		return "", err
+	}
+
+	us.UserRepo.Register(username, name, email, hashPass, bio, birthday)
 
 	// create otp for new user
 	code := generateOTP()
-	us.OTPRepo.Set(user.Email, code)
+	us.OTPRepo.Set(email, code)
 
 	// generate jwt token
-	token, err := jwtPackage.GenerateJwt(user.Email)
+	token, err := jwtPackage.OTPToken(email)
 	if err != nil {
 		return "", errors.New("token not created")
 	}
 
 	// send email
-	us.emailService.SendOTP(user.Email, code)
+	us.emailService.SendOTP(email, code)
 
 	return token, nil
 }
 
-func (us *UserService) Verify(tokenString string, email string, code uint) (string, string, error) {
+func (us *UserService) Verify(tokenString string, code uint) (string, string, error) {
 	claims := &jwt.MapClaims{}
 
 	// token verify
@@ -101,42 +112,45 @@ func (us *UserService) Verify(tokenString string, email string, code uint) (stri
 			if email == "" {
 				return "", "", fmt.Errorf("email claim is empty")
 			}
+
+			user, err := us.UserRepo.GetByEmail(email)
+			if err != nil {
+				return "", "", err
+			}
+			fmt.Println("email: ", user.Email, user.ID, user.Username)
+
+			// check otp code
+			otp, err := us.OTPRepo.Get(user.Email)
+			if err != nil {
+				return "", "", fmt.Errorf("failed to find OTP: %w", err)
+			}
+
+			if otp != code {
+				return "", "", fmt.Errorf("invalid OTP code")
+			} else {
+				if err := us.UserRepo.Verified(user, true); err != nil {
+					return "", "", fmt.Errorf("failed to change otp status")
+				}
+			}
+
+			// refresh token and access token
+			refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
+			if err != nil {
+				return "", "", errors.New("refresh token not created")
+			}
+
+			err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
+			if err != nil {
+				return "", "", err
+			}
+
+			return refreshToken, accessToken, nil
 		} else {
 			return "", "", fmt.Errorf("email claim missing or invalid")
 		}
 	}
 
-	user, err := us.UserRepo.GetByEmail(email)
-	if err != nil {
-		return "", "", err
-	}
-
-	// check otp code
-	otp, err := us.OTPRepo.Get(user.Email)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to find OTP: %w", err)
-	}
-
-	if otp != code {
-		return "", "", fmt.Errorf("invalid OTP code")
-	} else {
-		if err := us.UserRepo.Verified(user, true); err != nil {
-			return "", "", fmt.Errorf("failed to change otp status")
-		}
-	}
-
-	// refresh token and access token
-	refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
-	if err != nil {
-		return "", "", errors.New("refresh token not created")
-	}
-
-	err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
-	if err != nil {
-		return "", "", err
-	}
-
-	return refreshToken, accessToken, nil
+	return "", "", nil
 }
 
 func (us *UserService) NewAccessToken(refreshTokenString string) (string, error) {
@@ -162,9 +176,9 @@ func (us *UserService) NewAccessToken(refreshTokenString string) (string, error)
 
 		newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"username": user.Username,
-			"email": email,
-			"sub":   user.ID,
-			"exp":   time.Now().Add(time.Minute * 15).Unix(),
+			"email":    email,
+			"sub":      user.ID,
+			"exp":      time.Now().Add(time.Minute * 15).Unix(),
 		})
 
 		newAccessTokenString, err := newAccessToken.SignedString(secretKey)
@@ -178,23 +192,56 @@ func (us *UserService) NewAccessToken(refreshTokenString string) (string, error)
 	}
 }
 
+func (us *UserService) Login(email string, password string) (string, string, error) {
+	user, err := us.UserRepo.GetByEmail(email)
+	if err != nil {
+		return "", "", fmt.Errorf("email not found")
+	}
+
+	if user.OTPVerified {
+		err = us.RefreshTokenRepo.Get(user.ID)
+		if err == nil {
+			return "", "", fmt.Errorf("user is login")
+		}
+		
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+		if err != nil {
+			fmt.Println("Invalid credentials")
+		}
+
+		refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
+		if err != nil {
+			return "", "", errors.New("refresh token not created")
+		}
+
+		err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
+		if err != nil {
+			return "", "", err
+		}
+
+		return refreshToken, accessToken, nil
+	} else {
+		return "", "", fmt.Errorf("user not verified")
+	}
+}
+
 func (us *UserService) Logout(userID string) error {
 	user, err := us.GetByID(userID)
-    if err != nil {
-        return fmt.Errorf("failed to get user by id: %w", err)
-    }
+	if err != nil {
+		return fmt.Errorf("failed to get user by id: %w", err)
+	}
 
-    err = us.UserRepo.Verified(user, false)
-    if err != nil {
-        return fmt.Errorf("failed to unverify user: %w", err)
-    }
+	err = us.UserRepo.Verified(user, false)
+	if err != nil {
+		return fmt.Errorf("failed to unverify user: %w", err)
+	}
 
-    err = us.RefreshTokenRepo.Delete(user.ID)
-    if err != nil {
-        return fmt.Errorf("failed to delete refresh token: %w", err)
-    }
+	err = us.RefreshTokenRepo.Delete(user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to delete refresh token: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 func (us *UserService) Resend(email string) (string, error) {
@@ -206,7 +253,7 @@ func (us *UserService) Resend(email string) (string, error) {
 	us.OTPRepo.Set(user.Email, code)
 	us.emailService.SendOTP(user.Email, code)
 
-	token, err := jwtPackage.GenerateJwt(user.Email)
+	token, err := jwtPackage.OTPToken(user.Email)
 	if err != nil {
 		return "", errors.New("token not created")
 	}

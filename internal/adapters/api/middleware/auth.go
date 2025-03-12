@@ -23,9 +23,13 @@ func AuthMiddleware() gin.HandlerFunc {
 			return secretKey, nil
 		})
 
+		if err != nil {
+			fmt.Println("JWT Error:", err)
+		}
+
 		// check if token is valid
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "access token not valid"})
 			c.Abort()
 			return
 		}

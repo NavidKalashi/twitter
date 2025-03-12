@@ -26,6 +26,7 @@ func (s *Server) AddRoutes(userController *controller.UserController) {
 	s.engine.POST("/verify-email", userController.VerifyController)
 	s.engine.POST("/refresh", userController.RefreshController)
 	s.engine.POST("/send-code-again", userController.ResendController)
+	s.engine.POST("/login", userController.LoginController)
 	authRoutes.Use(middleware.AuthMiddleware())
 	{
 		authRoutes.GET("/profile", userController.GetController)

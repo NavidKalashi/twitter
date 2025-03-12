@@ -1,12 +1,14 @@
 package ports
 
 import (
+	"time"
+
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/google/uuid"
 )
 
 type User interface {
-	Register(user *models.User) error
+	Register(username string, name string, email string, hashPass string, bio string, birthday time.Time) error
 	GetByEmail(email string) (*models.User, error)
 	GetByID(userID string) (*models.User, error)
 	Edit(user *models.User) error
@@ -29,5 +31,6 @@ type OTP interface {
 
 type RefreshToken interface {
 	Create(userID uuid.UUID, refreshToken string) error
+	Get(userID uuid.UUID) error
 	Delete(userID uuid.UUID) error
 }

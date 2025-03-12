@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/service"
@@ -19,7 +20,14 @@ func NewUserController(userService *service.UserService) *UserController {
 }
 
 func (uc *UserController) RegisterController(c *gin.Context) {
-	var user models.User
+	var user struct {
+		Username string    `json:"username"`
+		Name     string    `json:"name"`
+		Email    string    `json:"email"`
+		Password string    `json:"password"`
+		Bio      string    `json:"bio"`
+		Birthday time.Time `json:"birthday"`
+	}
 
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
@@ -27,7 +35,7 @@ func (uc *UserController) RegisterController(c *gin.Context) {
 		return
 	}
 
-	tokenString, err := uc.userService.Register(&user)
+	tokenString, err := uc.userService.Register(user.Username, user.Name, user.Email, user.Password, user.Bio, user.Birthday)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -39,7 +47,6 @@ func (uc *UserController) RegisterController(c *gin.Context) {
 func (uc *UserController) VerifyController(c *gin.Context) {
 	var json struct {
 		Token string `json:"token"`
-		Email string `json:"email"`
 		Code  uint   `json:"code"`
 	}
 
@@ -48,7 +55,7 @@ func (uc *UserController) VerifyController(c *gin.Context) {
 		return
 	}
 
-	refreshToken, accessToken, err := uc.userService.Verify(json.Token, json.Email, json.Code)
+	refreshToken, accessToken, err := uc.userService.Verify(json.Token, json.Code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -75,6 +82,27 @@ func (uc *UserController) RefreshController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"new_access_token": newAcessToken})
 }
 
+func (uc *UserController) LoginController(c *gin.Context) {
+	var json struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := c.ShouldBindJSON(&json)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	refreshToken, accessToken, err := uc.userService.Login(json.Email, json.Password)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+}
+
 func (uc *UserController) LogoutController(c *gin.Context) {
 	userID, exists := c.Get("sub")
 	if !exists {
@@ -83,10 +111,10 @@ func (uc *UserController) LogoutController(c *gin.Context) {
 	}
 
 	userIDStr, ok := userID.(string)
-    if !ok {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
-        return
-    }
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
 
 	err := uc.userService.Logout(userIDStr)
 	if err != nil {
@@ -124,10 +152,10 @@ func (uc *UserController) GetController(c *gin.Context) {
 	}
 
 	userIDStr, ok := userID.(string)
-    if !ok {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
-        return
-    }
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
 
 	user, err := uc.userService.GetByID(userIDStr)
 	if err != nil {
