@@ -8,15 +8,13 @@ import (
 )
 
 type User interface {
-	Register(username string, name string, email string, hashPass string, bio string, birthday time.Time) error
+	Register(username, name, email, hashPass, bio string, birthday time.Time) error
 	GetByEmail(email string) (*models.User, error)
 	GetByID(userID string) (*models.User, error)
 	Edit(user *models.User) error
-	Delete(userID uuid.UUID) error
 	EmailExist(email string) (*models.User, error)
 	UsernameExist(username string) (*models.User, error)
 	Verified(user *models.User, sit bool) error
-	// GetUsers() ([]models.User, error)
 }
 
 type EmailService interface {
@@ -33,4 +31,15 @@ type RefreshToken interface {
 	Create(userID uuid.UUID, refreshToken string) error
 	Get(userID uuid.UUID) error
 	Delete(userID uuid.UUID) error
+}
+
+type Tweet interface {
+	Create(text, username string) error
+	DeleteAll(username string) error
+	Delete(username, tweetID string) error
+	GetTweets() ([]models.Tweet, error)
+}
+
+type Media interface {
+	
 }

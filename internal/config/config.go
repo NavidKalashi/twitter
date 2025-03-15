@@ -21,6 +21,13 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		DB       int    `mapstructure:"db"`
 	} `mapstructure:"redis"`
+	Minio struct {
+		Endpoint        string `mapstructure:"endpoint"`
+		AccessKeyID     string `mapstructure:"accessKeyID"`
+		SecretAccessKey string `mapstructure:"secretAccessKey"`
+		UseSSL          bool   `mapstructure:"useSSL"`
+		BucketName      string `mapstructure:"bucketName"`
+	} `mapstructure:"minio"`
 }
 
 var Cfg Config

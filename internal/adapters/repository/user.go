@@ -6,7 +6,6 @@ import (
 
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +17,7 @@ func NewUserRepository(db *gorm.DB) ports.User {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Register(username string, name string, email string, hashPass string, bio string, birthday time.Time) error {
+func (r *UserRepository) Register(username, name, email, hashPass, bio string, birthday time.Time) error {
     user := models.User{
 		Username: username,
 		Name:     name,
@@ -77,20 +76,6 @@ func (r *UserRepository) Edit(user *models.User) error {
 	if result.RowsAffected == 0 {
 		return errors.New("no user updated")
 	}
-	return nil
-}
-
-func (r *UserRepository) Delete(userID uuid.UUID) error {
-	var user models.User
-	result := r.db.Delete(&user, userID)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-
 	return nil
 }
 

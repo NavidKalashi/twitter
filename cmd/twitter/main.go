@@ -5,6 +5,7 @@ import (
 
 	"github.com/NavidKalashi/twitter/internal/adapters/api"
 	"github.com/NavidKalashi/twitter/internal/adapters/api/controller"
+	"github.com/NavidKalashi/twitter/internal/adapters/infra/minio"
 	"github.com/NavidKalashi/twitter/internal/adapters/infra/postgres"
 	"github.com/NavidKalashi/twitter/internal/adapters/infra/redis"
 	"github.com/NavidKalashi/twitter/internal/adapters/repository"
@@ -29,9 +30,17 @@ func main() {
 		log.Fatalf("failed to initialize redis: %v", err)
 	}
 
+	minio, err := minio.InitMinio(cfg)
+	if err != nil {
+		log.Fatalf("failed to initialize minio: %v", err)
+	}
+
 	// otp
 	otpRepository := repository.NewOTPRepository(redis.GetRedis())
-	
+
+	// media
+	mediaRepository := repository.NewMediaRepository(minio.GetMinio(), db.GetDB())
+
 	// refresh token
 	refreshTokenRepository := repository.NewRefreshTokenRepository(db.GetDB())
 
@@ -40,8 +49,13 @@ func main() {
 	userService := service.NewUserService(userRepository, otpRepository, refreshTokenRepository)
 	userController := controller.NewUserController(userService)
 
+	// tweet
+	tweetRepository := repository.NewTweetRepository(db.GetDB())
+	tweetService := service.NewTweetService(tweetRepository, mediaRepository)
+	tweetController := controller.NewTweetController(tweetService)
+
 	r := gin.Default()
 
-	server := api.NewServer(r, userController)
+	server := api.NewServer(r, userController, tweetController)
 	server.Start()
 }

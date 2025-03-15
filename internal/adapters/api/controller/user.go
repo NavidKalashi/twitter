@@ -7,7 +7,6 @@ import (
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -183,21 +182,4 @@ func (uc *UserController) EditController(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
-}
-
-func (uc *UserController) DeleteController(c *gin.Context) {
-	userIDStr := c.Param("id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID"})
-		return
-	}
-
-	err = uc.userService.Delete(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

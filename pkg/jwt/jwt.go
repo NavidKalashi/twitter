@@ -41,7 +41,7 @@ func GenerateAccessAndRefresh(user *models.User) (string, string, error) {
 	// refresh token
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": user.Email,
-		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
+		"exp":   time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 	refreshTokenString, err := refreshToken.SignedString(secretKey)
 	if err != nil {

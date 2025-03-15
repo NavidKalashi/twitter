@@ -11,7 +11,6 @@ import (
 	"github.com/NavidKalashi/twitter/internal/core/ports"
 	jwtPackage "github.com/NavidKalashi/twitter/pkg/jwt"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -42,7 +41,7 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (us *UserService) Register(username string, name string, email string, password string, bio string, birthday time.Time) (string, error) {
+func (us *UserService) Register(username, name, email, password, bio string, birthday time.Time) (string, error) {
 
 	// check email and username not exist
 	existEmail, err := us.UserRepo.EmailExist(email)
@@ -201,7 +200,7 @@ func (us *UserService) Login(email string, password string) (string, string, err
 	if user.OTPVerified {
 		err = us.RefreshTokenRepo.Get(user.ID)
 		if err == nil {
-			return "", "", fmt.Errorf("user is login")
+			return "", "", fmt.Errorf("user is loged in")
 		}
 		
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
@@ -283,8 +282,4 @@ func (us *UserService) Edit(user *models.User) error {
 	user.UpdatedAt = time.Now()
 
 	return us.UserRepo.Edit(user)
-}
-
-func (us *UserService) Delete(id uuid.UUID) error {
-	return us.UserRepo.Delete(id)
 }
