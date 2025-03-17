@@ -9,6 +9,7 @@ import (
 	"github.com/NavidKalashi/twitter/internal/adapters/infra/postgres"
 	"github.com/NavidKalashi/twitter/internal/adapters/infra/redis"
 	"github.com/NavidKalashi/twitter/internal/adapters/repository"
+	"github.com/NavidKalashi/twitter/internal/adapters/storage"
 	"github.com/NavidKalashi/twitter/internal/config"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 	"github.com/gin-gonic/gin"
@@ -39,7 +40,8 @@ func main() {
 	otpRepository := repository.NewOTPRepository(redis.GetRedis())
 
 	// media
-	mediaRepository := repository.NewMediaRepository(minio.GetMinio(), db.GetDB())
+	mediaStorage := storage.NewMinioStorage(minio.GetMinio())
+	mediaRepository := repository.NewMediaRepository(db.GetDB())
 
 	// refresh token
 	refreshTokenRepository := repository.NewRefreshTokenRepository(db.GetDB())
@@ -51,7 +53,7 @@ func main() {
 
 	// tweet
 	tweetRepository := repository.NewTweetRepository(db.GetDB())
-	tweetService := service.NewTweetService(tweetRepository, mediaRepository)
+	tweetService := service.NewTweetService(tweetRepository, mediaRepository, mediaStorage)
 	tweetController := controller.NewTweetController(tweetService)
 
 	r := gin.Default()

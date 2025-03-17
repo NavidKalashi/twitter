@@ -16,12 +16,8 @@ func NewTweetRepository(db *gorm.DB) ports.Tweet {
 	return &TweetRepository{db: db}
 }
 
-func (tr *TweetRepository) Create(text, username string) error {
-	tweet := &models.Tweet{
-		Text: text,
-		CreatedBy: username,
-	}
-	return tr.db.Create(tweet).Error
+func (tr *TweetRepository) Create(tweet *models.Tweet) error {
+    return tr.db.Create(tweet).Error
 }
 
 func (tr *TweetRepository) DeleteAll(username string) error {
@@ -42,9 +38,6 @@ func (tr *TweetRepository) Delete(username, tweetID string) error {
 
 func (tr *TweetRepository) GetTweets() ([]models.Tweet, error) {
 	var tweets []models.Tweet
-    result := tr.db.Find(&tweets)
-    if result.Error != nil {
-        return nil, result.Error
-    }
-    return tweets, nil
+    err := tr.db.Preload("Media").Find(&tweets).Error
+    return tweets, err
 }

@@ -17,7 +17,9 @@ func NewTweetController(tweetService *service.TweetService) *TweetController {
 
 func (tc *TweetController) CreateController(c *gin.Context) {
 	var tweet struct {
-		Text string `json:"text"`
+		Text     string   `json:"text"`
+		Type     string   `json:"type"`
+		FileName []string `json:"file_name"`
 	}
 
 	if err := c.BindJSON(&tweet); err != nil {
@@ -37,9 +39,9 @@ func (tc *TweetController) CreateController(c *gin.Context) {
 		return
 	}
 
-	err := tc.tweetService.Create(tweet.Text, usernameStr)
+	err := tc.tweetService.Create(tweet.Text, usernameStr, tweet.Type, tweet.FileName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "tweet not created"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -71,7 +73,7 @@ func (tc *TweetController) DeleteAllController(c *gin.Context) {
 	err := tc.tweetService.DeleteAll(usernameStr)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"error": "tweet not deleted"})
-		return 
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "tweets deleted successfully"})

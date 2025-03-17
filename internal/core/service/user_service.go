@@ -1,7 +1,6 @@
 package service
 
 import (
-	// "context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -177,7 +176,7 @@ func (us *UserService) NewAccessToken(refreshTokenString string) (string, error)
 			"username": user.Username,
 			"email":    email,
 			"sub":      user.ID,
-			"exp":      time.Now().Add(time.Minute * 15).Unix(),
+			"exp":      time.Now().Add(time.Hour * 24 * 2).Unix(),
 		})
 
 		newAccessTokenString, err := newAccessToken.SignedString(secretKey)

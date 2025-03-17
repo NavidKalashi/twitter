@@ -11,8 +11,7 @@ import (
 )
 
 type Minio struct {
-	mc     *minio.Client
-	bucket string
+	client *minio.Client
 }
 
 func InitMinio(cfg *config.Config) (*Minio, error) {
@@ -44,9 +43,9 @@ func InitMinio(cfg *config.Config) (*Minio, error) {
 		fmt.Println("Bucket already exists:", bucketName)
 	}
 
-	return &Minio{mc: minioClient, bucket: bucketName}, nil
+	return &Minio{client: minioClient}, nil
 }
 
 func (m *Minio) GetMinio() *minio.Client {
-	return m.mc
+	return m.client
 }

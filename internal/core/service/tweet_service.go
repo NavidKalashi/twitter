@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
 )
@@ -8,14 +11,44 @@ import (
 type TweetService struct {
 	tweetRepo ports.Tweet
 	mediaRepo ports.Media
+	storage   ports.Storage
 }
 
-func NewTweetService(tweetRepo ports.Tweet, mediaRepo ports.Media) *TweetService {
-	return &TweetService{tweetRepo: tweetRepo, mediaRepo: mediaRepo}
+func NewTweetService(tweetRepo ports.Tweet, mediaRepo ports.Media, storage ports.Storage) *TweetService {
+	return &TweetService{tweetRepo: tweetRepo, mediaRepo: mediaRepo, storage: storage}
 }
 
-func (ts *TweetService) Create(text, username string) error {
-	return ts.tweetRepo.Create(text, username)
+func (ts *TweetService) Create(text, username, fileType string, mediaFiles []string) error {
+	tweet := &models.Tweet{
+		Text:      text,
+		CreatedBy: username,
+		CreatedAt: time.Now(),
+	}
+
+	if err := ts.tweetRepo.Create(tweet); err != nil {
+		return err
+	}
+
+	for _, filePath := range mediaFiles {
+		fileURL, err := ts.storage.UploadMedia(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to upload media: %v", err)
+		}
+
+		media := &models.Media{
+			TweetID:   tweet.ID,
+			Type:      fileType,
+			FileName:  filePath,
+			FileURL:   fileURL,
+			CreatedAt: time.Now(),
+		}
+
+		if err := ts.mediaRepo.SaveMedia(media); err != nil {
+			return fmt.Errorf("failed to save media: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func (ts *TweetService) DeleteAll(username string) error {

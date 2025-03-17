@@ -34,12 +34,16 @@ type RefreshToken interface {
 }
 
 type Tweet interface {
-	Create(text, username string) error
+	Create(tweet *models.Tweet) error
 	DeleteAll(username string) error
 	Delete(username, tweetID string) error
 	GetTweets() ([]models.Tweet, error)
 }
 
 type Media interface {
-	
+	SaveMedia(media *models.Media) error
+}
+
+type Storage interface {
+	UploadMedia(filePath string) (string, error)
 }
