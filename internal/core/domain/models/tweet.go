@@ -10,5 +10,9 @@ type Tweet struct {
 	CreatedBy string    `gorm:"type:varchar(255);not null" json:"created_by"`
 	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
 	DeletedAt time.Time `gorm:"type:timestamp" json:"deleted_at"`
+	Views     int       `gorm:"default:0" json:"views"`
+	Likes     int       `gorm:"default:0" json:"likes"`
+	Retweet   int       `gorm:"default:0" json:"retweet"`
 	Media     []Media   `gorm:"foreignKey:TweetID;references:ID"`
+	Gesture   []Gesture `gorm:"foreignKey:TweetID;references:ID"`
 }

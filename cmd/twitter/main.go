@@ -56,8 +56,13 @@ func main() {
 	tweetService := service.NewTweetService(tweetRepository, mediaRepository, mediaStorage)
 	tweetController := controller.NewTweetController(tweetService)
 
+	// gesture
+	gestureRepository := repository.NewGestureRepository(db.GetDB())
+	gestureService := service.NewGestureService(gestureRepository, tweetRepository)
+	gestureController := controller.NewGestureService(gestureService)
+
 	r := gin.Default()
 
-	server := api.NewServer(r, userController, tweetController)
+	server := api.NewServer(r, userController, tweetController, gestureController)
 	server.Start()
 }

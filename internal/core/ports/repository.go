@@ -38,6 +38,8 @@ type Tweet interface {
 	DeleteAll(username string) error
 	Delete(username, tweetID string) error
 	GetTweets() ([]models.Tweet, error)
+	GetByID(tweetID string) (*models.Tweet, error)
+	Update(tweet *models.Tweet) error
 }
 
 type Media interface {
@@ -46,4 +48,10 @@ type Media interface {
 
 type Storage interface {
 	UploadMedia(filePath string) (string, error)
+}
+
+type Gesture interface {
+	Save(gesture *models.Gesture) error
+	Count(tweetID string, gestureType string) (int, error)
+	GetByUsername(username string, gesType string) (*models.Gesture, error)
 }

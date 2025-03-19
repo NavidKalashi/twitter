@@ -19,7 +19,8 @@ type User struct {
 	UpdatedAt    time.Time `gorm:"type:timestamp" json:"updated_at"`
 	OTPVerified  bool      `gorm:"default:false;not null" json:"verified"`
 	RefreshToken []RefreshToken
-	Tweet        []Tweet `gorm:"foreignKey:CreatedBy;references:Username"`
+	Tweet        []Tweet   `gorm:"foreignKey:CreatedBy;references:Username"`
+	Gesture      []Gesture `gorm:"foreignKey:Username;references:Username"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

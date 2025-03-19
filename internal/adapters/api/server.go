@@ -7,22 +7,24 @@ import (
 )
 
 type Server struct {
-	userController *controller.UserController
-	tweetController *controller.TweetController
-	engine         *gin.Engine
+	userController    *controller.UserController
+	tweetController   *controller.TweetController
+	gestureController *controller.GestureControlelr
+	engine            *gin.Engine
 }
 
-func NewServer(engine *gin.Engine, userController *controller.UserController, tweetController *controller.TweetController) *Server {
+func NewServer(engine *gin.Engine, userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr) *Server {
 	server := &Server{
-		userController: userController,
-		tweetController: tweetController,
-		engine: engine,
+		userController:    userController,
+		tweetController:   tweetController,
+		gestureController: gestureController,
+		engine:            engine,
 	}
-	server.AddRoutes(userController, tweetController)
+	server.AddRoutes(userController, tweetController, gestureController)
 	return server
 }
 
-func (s *Server) AddRoutes(userController *controller.UserController, tweetController *controller.TweetController) {
+func (s *Server) AddRoutes(userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr) {
 	authRoutes := s.engine.Group("/protected")
 	s.engine.POST("/register", userController.RegisterController)
 	s.engine.POST("/verify-email", userController.VerifyController)
@@ -38,6 +40,9 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 		authRoutes.POST("/create-tweet", tweetController.CreateController)
 		authRoutes.DELETE("/delete-all-tweet", tweetController.DeleteAllController)
 		authRoutes.DELETE("/delete-tweet/:id", tweetController.DeleteController)
+		authRoutes.POST("/view-tweet/:type/:tweet_id", gestureController.AddViewController)
+		authRoutes.POST("/like-tweet/:type/:tweet_id", gestureController.AddLikeController)
+		authRoutes.POST("/retweet-tweet/:type/:tweet_id", gestureController.AddRetweetController)
 	}
 }
 

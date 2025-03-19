@@ -38,12 +38,12 @@ func (or *OTPRepository) Get(email string) (uint, error) {
 
 	// Validate OTP format
 	if !regexp.MustCompile(`^\d+$`).MatchString(otpStr) {
-			return 0, fmt.Errorf("invalid OTP format: %s", otpStr)
+		return 0, fmt.Errorf("invalid OTP format: %s", otpStr)
 	}
 
 	otpUint64, err := strconv.ParseUint(otpStr, 10, 32)
 	if err != nil {
-			return 0, fmt.Errorf("failed to parse OTP: %w", err)
+		return 0, fmt.Errorf("failed to parse OTP: %w", err)
 	}
 
 	return uint(otpUint64), nil

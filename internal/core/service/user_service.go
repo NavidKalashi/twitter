@@ -131,7 +131,7 @@ func (us *UserService) Verify(tokenString string, code uint) (string, string, er
 				}
 			}
 
-			// refresh token and access token
+			// refresh and access token
 			refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
 			if err != nil {
 				return "", "", errors.New("refresh token not created")
