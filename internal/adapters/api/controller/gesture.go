@@ -17,7 +17,6 @@ func NewGestureService(gestureService *service.GestureService) *GestureControlel
 
 func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 	tweetID := c.Param("tweet_id")
-	gesType := c.Param("type")
 
 	username, exists := c.Get("username")
 	if !exists {
@@ -31,7 +30,7 @@ func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 		return
 	}
 
-	err := gc.gestureService.AddView(tweetID, usernameStr, gesType)
+	err := gc.gestureService.AddView(tweetID, usernameStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -42,7 +41,6 @@ func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 
 func (gc *GestureControlelr) AddLikeController(c *gin.Context) {
 	tweetID := c.Param("tweet_id")
-	gesType := c.Param("type")
 
 	username, exists := c.Get("username")
 	if !exists {
@@ -56,7 +54,7 @@ func (gc *GestureControlelr) AddLikeController(c *gin.Context) {
 		return
 	}
 
-	err := gc.gestureService.AddLike(tweetID, usernameStr, gesType)
+	err := gc.gestureService.AddLike(tweetID, usernameStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -67,7 +65,6 @@ func (gc *GestureControlelr) AddLikeController(c *gin.Context) {
 
 func (gc *GestureControlelr) AddRetweetController(c *gin.Context) {
 	tweetID := c.Param("tweet_id")
-	gesType := c.Param("type")
 
 	username, exists := c.Get("username")
 	if !exists {
@@ -81,7 +78,7 @@ func (gc *GestureControlelr) AddRetweetController(c *gin.Context) {
 		return
 	}
 
-	err := gc.gestureService.AddRetweet(tweetID, usernameStr, gesType)
+	err := gc.gestureService.AddRetweet(tweetID, usernameStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

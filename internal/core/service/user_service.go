@@ -160,7 +160,7 @@ func (us *UserService) NewAccessToken(refreshTokenString string) (string, error)
 	})
 
 	if err != nil || !refreshToken.Valid {
-		return "", fmt.Errorf("invalid refres token")
+		return "", fmt.Errorf("invalid refresh token")
 	}
 
 	// generate new access token
@@ -199,7 +199,7 @@ func (us *UserService) Login(email string, password string) (string, string, err
 	if user.OTPVerified {
 		err = us.RefreshTokenRepo.Get(user.ID)
 		if err == nil {
-			return "", "", fmt.Errorf("user is loged in")
+			return "", "", fmt.Errorf("user is logged in")
 		}
 		
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
@@ -256,6 +256,23 @@ func (us *UserService) Resend(email string) (string, error) {
 		return "", errors.New("token not created")
 	}
 	return token, nil
+}
+
+func (us *UserService) Search(username string) ([]models.User, error) {
+	if username == "" {
+		return nil, errors.New("username cannot be empty")
+	}
+
+	user, err := us.UserRepo.Search(username)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, nil
+	}
+
+	return []models.User{*user}, nil
 }
 
 func (us *UserService) GetByEmail(email string) (*models.User, error) {

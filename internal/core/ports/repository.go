@@ -15,6 +15,7 @@ type User interface {
 	EmailExist(email string) (*models.User, error)
 	UsernameExist(username string) (*models.User, error)
 	Verified(user *models.User, sit bool) error
+	Search(username string) (*models.User, error)
 }
 
 type EmailService interface {
@@ -52,6 +53,6 @@ type Storage interface {
 
 type Gesture interface {
 	Save(gesture *models.Gesture) error
-	Count(tweetID string, gestureType string) (int, error)
-	GetByUsername(username string, gesType string) (*models.Gesture, error)
+	Count(tweetID, username string) (int, error)
+	GetByUsername(tweetID, username string) (*models.Gesture, error)
 }

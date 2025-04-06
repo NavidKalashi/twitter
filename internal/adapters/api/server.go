@@ -31,6 +31,7 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 	s.engine.POST("/refresh", userController.RefreshController)
 	s.engine.POST("/send-code-again", userController.ResendController)
 	s.engine.POST("/login", userController.LoginController)
+	s.engine.POST("/search", userController.SearchController)
 	s.engine.GET("/tweets", tweetController.GetController)
 	authRoutes.Use(middleware.AuthMiddleware())
 	{
@@ -40,9 +41,9 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 		authRoutes.POST("/create-tweet", tweetController.CreateController)
 		authRoutes.DELETE("/delete-all-tweet", tweetController.DeleteAllController)
 		authRoutes.DELETE("/delete-tweet/:id", tweetController.DeleteController)
-		authRoutes.POST("/view-tweet/:type/:tweet_id", gestureController.AddViewController)
-		authRoutes.POST("/like-tweet/:type/:tweet_id", gestureController.AddLikeController)
-		authRoutes.POST("/retweet-tweet/:type/:tweet_id", gestureController.AddRetweetController)
+		authRoutes.POST("/tweet/:tweet_id/view", gestureController.AddViewController)
+		authRoutes.POST("/tweet/:tweet_id/like", gestureController.AddLikeController)
+		authRoutes.POST("/tweet/:tweet_id/retweet", gestureController.AddRetweetController)
 	}
 }
 

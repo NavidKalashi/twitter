@@ -18,15 +18,15 @@ func (gr *GestureRepository) Save(gesture *models.Gesture) error {
 	return gr.db.Create(gesture).Error
 }
 
-func (gr *GestureRepository) Count(tweetID string, gestureType string) (int, error) {
+func (gr *GestureRepository) Count(tweetID, username string) (int, error) {
 	var count int64
-	err := gr.db.Create(&models.Gesture{}).Where("tweet_id = ? AND type = ?", tweetID, gestureType).Count(&count).Error
+	err := gr.db.Create(&models.Gesture{}).Where("tweet_id = ? AND username = ?", tweetID, username).Count(&count).Error
 	return int(count), err
 }
 
-func (r *GestureRepository) GetByUsername(username string, gesType string) (*models.Gesture, error) {
+func (r *GestureRepository) GetByUsername(tweetID, username string) (*models.Gesture, error) {
 	var gesture models.Gesture
-	if err := r.db.Where("username = ? AND type = ?", username, gesType).First(&gesture).Error; err != nil {
+	if err := r.db.Where("tweet_id = ? AND username = ?", tweetID, username).First(&gesture).Error; err != nil {
 		return nil, err
 	}
 	return &gesture, nil

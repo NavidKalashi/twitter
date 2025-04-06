@@ -143,6 +143,25 @@ func (uc *UserController) ResendController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "code sent successfully", "new_token": token})
 }
 
+func (uc *UserController) SearchController(c *gin.Context) {
+	var json struct {
+		Username string `json:"username"`
+	}
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	user, err := uc.userService.Search(json.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
+}
+
 func (uc *UserController) GetController(c *gin.Context) {
 	userID, exists := c.Get("sub")
 	if !exists {
@@ -161,7 +180,7 @@ func (uc *UserController) GetController(c *gin.Context) {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}

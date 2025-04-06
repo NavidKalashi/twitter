@@ -60,9 +60,17 @@ func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) Search(username string) (*models.User, error) {
+	var user models.User
+	if err := r.db.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) GetByID(userID string) (*models.User, error) {
 	var user models.User
-	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+	if err := r.db.Preload("Tweet").Where("id = ?", userID).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
