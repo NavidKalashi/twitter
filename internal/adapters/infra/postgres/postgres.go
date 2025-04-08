@@ -22,7 +22,7 @@ func InitDB(cfg *config.Config) (*DB, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.User{}, &models.RefreshToken{}, &models.Tweet{}, &models.Media{}, &models.Gesture{})
+	err = db.AutoMigrate(&models.User{}, &models.RefreshToken{}, &models.Tweet{}, &models.Media{}, &models.Gesture{}, &models.Follow{})
 	if err != nil {
 		return nil, err
 	}

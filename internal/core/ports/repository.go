@@ -11,6 +11,7 @@ type User interface {
 	Register(username, name, email, hashPass, bio string, birthday time.Time) error
 	GetByEmail(email string) (*models.User, error)
 	GetByID(userID string) (*models.User, error)
+	GetByName(username string) (*models.User, error)
 	Edit(user *models.User) error
 	EmailExist(email string) (*models.User, error)
 	UsernameExist(username string) (*models.User, error)
@@ -55,4 +56,14 @@ type Gesture interface {
 	Save(gesture *models.Gesture) error
 	Count(tweetID, username string) (int, error)
 	GetByUsername(tweetID, username string) (*models.Gesture, error)
+}
+
+type Follow interface {
+	Save(follow *models.Follow) error
+	// GetFollowers(username string) ([]models.Follow, error)
+	// GetFollowing(username string) ([]models.Follow, error)
+	// GetByFollowerAndFollowing(followerName, followingName string) (*models.Follow, error)
+	// Delete(followerName, followingName string) error
+	// GetFollowerCount(username string) (int, error)
+	// GetFollowingCount(username string) (int, error)
 }

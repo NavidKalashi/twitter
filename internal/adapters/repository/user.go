@@ -76,6 +76,14 @@ func (r *UserRepository) GetByID(userID string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) GetByName(username string) (*models.User, error) {
+	var user models.User
+	if err := r.db.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) Edit(user *models.User) error {
 	result := r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(user)
 	if result.Error != nil {

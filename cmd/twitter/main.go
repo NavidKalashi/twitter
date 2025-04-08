@@ -61,8 +61,13 @@ func main() {
 	gestureService := service.NewGestureService(gestureRepository, tweetRepository)
 	gestureController := controller.NewGestureService(gestureService)
 
+	// follow
+	followRepository := repository.NewFollowRepository(db.GetDB())
+	followService := service.NewFollowService(followRepository, userRepository)
+	followController := controller.NewFollowController(followService)
+
 	r := gin.Default()
 
-	server := api.NewServer(r, userController, tweetController, gestureController)
+	server := api.NewServer(r, userController, tweetController, gestureController, followController)
 	server.Start()
 }

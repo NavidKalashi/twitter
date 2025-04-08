@@ -10,21 +10,23 @@ type Server struct {
 	userController    *controller.UserController
 	tweetController   *controller.TweetController
 	gestureController *controller.GestureControlelr
+	followController  *controller.FollowController
 	engine            *gin.Engine
 }
 
-func NewServer(engine *gin.Engine, userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr) *Server {
+func NewServer(engine *gin.Engine, userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr, followController *controller.FollowController) *Server {
 	server := &Server{
 		userController:    userController,
 		tweetController:   tweetController,
 		gestureController: gestureController,
+		followController:  followController,
 		engine:            engine,
 	}
-	server.AddRoutes(userController, tweetController, gestureController)
+	server.AddRoutes(userController, tweetController, gestureController, followController)
 	return server
 }
 
-func (s *Server) AddRoutes(userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr) {
+func (s *Server) AddRoutes(userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr, followController *controller.FollowController) {
 	authRoutes := s.engine.Group("/protected")
 	s.engine.POST("/register", userController.RegisterController)
 	s.engine.POST("/verify-email", userController.VerifyController)
@@ -44,6 +46,7 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 		authRoutes.POST("/tweet/:tweet_id/view", gestureController.AddViewController)
 		authRoutes.POST("/tweet/:tweet_id/like", gestureController.AddLikeController)
 		authRoutes.POST("/tweet/:tweet_id/retweet", gestureController.AddRetweetController)
+		authRoutes.POST("/follow/:following_name", followController.FollowingController)
 	}
 }
 
