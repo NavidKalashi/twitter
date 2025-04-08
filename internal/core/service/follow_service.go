@@ -16,7 +16,7 @@ func NewFollowService(followRepo ports.Follow, userRepo ports.User) *FollowServi
 	return &FollowService{followRepo: followRepo, userRepo: userRepo}
 }
 
-func (fs *FollowService) FollowUser(followerName string, followingName string) error {
+func (fs *FollowService) FollowUser(followerName, followingName string) error {
 	user, err := fs.userRepo.GetByName(followingName)
 	if err != nil {
 		return fmt.Errorf("user does not exist")
@@ -28,6 +28,15 @@ func (fs *FollowService) FollowUser(followerName string, followingName string) e
 	}
 
 	return fs.followRepo.Save(follow)
+}
+
+func (fs *FollowService) UnfollowUser(followerName, followingName string) error {
+	user, err := fs.userRepo.GetByName(followingName)
+	if err != nil {
+		return fmt.Errorf("user does not exist")
+	}
+
+	return fs.followRepo.Delete(followerName, user.Username)
 }
 
 func (fs *FollowService) GetFollowers(username string) ([]string, error) {

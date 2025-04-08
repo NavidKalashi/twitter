@@ -61,6 +61,7 @@ type Gesture interface {
 type Follow interface {
 	Save(follow *models.Follow) error
 	GetFollowers(username string) ([]models.Follow, error)
+	Delete(followerName, followingName string) error
 	// GetFollowing(username string) ([]models.Follow, error)
 	// GetByFollowerAndFollowing(followerName, followingName string) (*models.Follow, error)
 	// Delete(followerName, followingName string) error
