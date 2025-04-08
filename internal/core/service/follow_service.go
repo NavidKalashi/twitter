@@ -29,3 +29,17 @@ func (fs *FollowService) FollowUser(followerName string, followingName string) e
 
 	return fs.followRepo.Save(follow)
 }
+
+func (fs *FollowService) GetFollowers(username string) ([]string, error) {
+	follows, err := fs.followRepo.GetFollowers(username)
+	if err != nil {
+		return nil, fmt.Errorf("you don't have any followers")
+	}
+
+	var followers []string
+	for _, follow := range follows {
+		followers = append(followers, follow.FollowerName)
+	}
+
+	return followers, nil
+}

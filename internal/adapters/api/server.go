@@ -47,6 +47,7 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 		authRoutes.POST("/tweet/:tweet_id/like", gestureController.AddLikeController)
 		authRoutes.POST("/tweet/:tweet_id/retweet", gestureController.AddRetweetController)
 		authRoutes.POST("/follow/:following_name", followController.FollowingController)
+		authRoutes.GET("/follow/your-followers", followController.GetFollowersController)
 	}
 }
 
