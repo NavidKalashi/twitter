@@ -63,7 +63,7 @@ func main() {
 
 	// follow
 	followRepository := repository.NewFollowRepository(db.GetDB())
-	followService := service.NewFollowService(followRepository, userRepository)
+	followService := service.NewFollowService(followRepository, userRepository, tweetRepository)
 	followController := controller.NewFollowController(followService)
 
 	r := gin.Default()

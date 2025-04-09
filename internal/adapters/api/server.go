@@ -49,6 +49,7 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 		authRoutes.POST("/follow/:following_name", followController.FollowingController)
 		authRoutes.DELETE("/unfollow/:following_name", followController.UnfollowController)
 		authRoutes.GET("/follow/your-followers", followController.GetFollowersController)
+		authRoutes.GET("/feeds", followController.FeedController)
 	}
 }
 

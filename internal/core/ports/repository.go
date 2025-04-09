@@ -42,6 +42,7 @@ type Tweet interface {
 	GetTweets() ([]models.Tweet, error)
 	GetByID(tweetID string) (*models.Tweet, error)
 	Update(tweet *models.Tweet) error
+	GetByUsername(username string) ([]models.Tweet, error)
 }
 
 type Media interface {
@@ -62,6 +63,7 @@ type Follow interface {
 	Save(follow *models.Follow) error
 	GetFollowers(username string) ([]models.Follow, error)
 	Delete(followerName, followingName string) error
+	GetFollowing(username string) ([]models.Follow, error)
 	// GetFollowing(username string) ([]models.Follow, error)
 	// GetByFollowerAndFollowing(followerName, followingName string) (*models.Follow, error)
 	// Delete(followerName, followingName string) error

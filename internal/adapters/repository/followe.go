@@ -30,3 +30,11 @@ func (fr *FollowRepository) GetFollowers(username string) ([]models.Follow, erro
 	}
 	return follow, nil
 }
+
+func (fr *FollowRepository) GetFollowing(username string) ([]models.Follow, error) {
+	var follow []models.Follow
+	if err := fr.db.Where("follower_name = ?", username).Find(&follow).Error; err != nil {
+		return nil, err
+	}
+	return follow, nil
+}
