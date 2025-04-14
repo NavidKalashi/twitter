@@ -42,7 +42,7 @@ type Tweet interface {
 	GetTweets() ([]models.Tweet, error)
 	GetByID(tweetID string) (*models.Tweet, error)
 	Update(tweet *models.Tweet) error
-	GetByUsername(username string) ([]models.Tweet, error)
+	GetByUsername(username string) (*models.Tweet, error)
 }
 
 type Media interface {
@@ -59,14 +59,23 @@ type Gesture interface {
 	GetByUsername(tweetID, username string) (*models.Gesture, error)
 }
 
+type Consume interface {
+	ConsumeFeedEvents(handler func(models.Tweet)) error
+	ConsumeGestureEvents(handler func(models.Gesture)) error
+}
+
+type Producer interface {
+	ProducerFeedEvents(createdTweet *models.Tweet) error
+}
+
 type Follow interface {
 	Save(follow *models.Follow) error
-	GetFollowers(username string) ([]models.Follow, error)
 	Delete(followerName, followingName string) error
+	GetFollowers(username string) ([]models.Follow, error)
 	GetFollowing(username string) ([]models.Follow, error)
-	// GetFollowing(username string) ([]models.Follow, error)
-	// GetByFollowerAndFollowing(followerName, followingName string) (*models.Follow, error)
-	// Delete(followerName, followingName string) error
-	// GetFollowerCount(username string) (int, error)
-	// GetFollowingCount(username string) (int, error)
+}
+
+type Feed interface {
+	Set(username string, tweet string) error
+	Get(username string) ([]string, error)
 }

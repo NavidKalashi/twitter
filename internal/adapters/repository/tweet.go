@@ -52,10 +52,10 @@ func (tr *TweetRepository) Update(tweet *models.Tweet) error {
 	return tr.db.Save(tweet).Error
 }
 
-func (tr *TweetRepository) GetByUsername(username string) ([]models.Tweet, error) {
-	var tweets []models.Tweet
+func (tr *TweetRepository) GetByUsername(username string) (*models.Tweet, error) {
+	var tweets models.Tweet
 	if err := tr.db.Preload("Media").Preload("Gesture").Where("created_by = ?", username).Find(&tweets).Error; err != nil {
 		return nil, err
 	}
-	return tweets, nil
+	return &tweets, nil
 }

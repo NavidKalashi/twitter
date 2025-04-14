@@ -8,11 +8,12 @@ import (
 )
 
 type TweetController struct {
-	tweetService *service.TweetService
+	tweetService   *service.TweetService
+	produceService *service.ProduceService
 }
 
-func NewTweetController(tweetService *service.TweetService) *TweetController {
-	return &TweetController{tweetService: tweetService}
+func NewTweetController(tweetService *service.TweetService, produceService *service.ProduceService) *TweetController {
+	return &TweetController{tweetService: tweetService, produceService: produceService}
 }
 
 func (tc *TweetController) CreateController(c *gin.Context) {
@@ -39,7 +40,13 @@ func (tc *TweetController) CreateController(c *gin.Context) {
 		return
 	}
 
-	err := tc.tweetService.Create(tweet.Text, usernameStr, tweet.Type, tweet.FileName)
+	createdTweets, err := tc.tweetService.Create(tweet.Text, usernameStr, tweet.Type, tweet.FileName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = tc.produceService.Produce(createdTweets)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

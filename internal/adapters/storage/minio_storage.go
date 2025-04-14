@@ -10,7 +10,7 @@ import (
 )
 
 type MinioStorage struct {
-	client     *minio.Client
+	client *minio.Client
 }
 
 func NewMinioStorage(client *minio.Client) ports.Storage {
@@ -24,7 +24,7 @@ func (ms *MinioStorage) UploadMedia(filePath string) (string, error) {
 	}
 	defer file.Close()
 
-	objectName := "uploads/"+ filePath
+	objectName := "uploads/" + filePath
 	_, err = ms.client.PutObject(context.TODO(), "testbucket", objectName, file, -1, minio.PutObjectOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload file to minio: %v", err)

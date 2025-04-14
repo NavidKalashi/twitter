@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
@@ -12,10 +11,16 @@ type FollowService struct {
 	followRepo ports.Follow
 	userRepo   ports.User
 	tweetRepo  ports.Tweet
+	feedRepo   ports.Feed
 }
 
-func NewFollowService(followRepo ports.Follow, userRepo ports.User, tweetRepo ports.Tweet) *FollowService {
-	return &FollowService{followRepo: followRepo, userRepo: userRepo, tweetRepo: tweetRepo}
+func NewFollowService(followRepo ports.Follow, userRepo ports.User, tweetRepo ports.Tweet, feedRepo ports.Feed) *FollowService {
+	return &FollowService{
+		followRepo: followRepo, 
+		userRepo: userRepo, 
+		tweetRepo: tweetRepo, 
+		feedRepo: feedRepo,
+	}
 }
 
 func (fs *FollowService) FollowUser(followerName, followingName string) error {
@@ -67,23 +72,4 @@ func (fs *FollowService) GetFollowing(username string) ([]string, error) {
 	}
 
 	return followings, nil
-}
-
-func (fs *FollowService) Feed(username string) ([]models.Tweet, error) {
-	followings, err := fs.GetFollowing(username)
-	if err != nil {
-		return nil, err
-	}
-	log.Println("followers:", followings, username)
-
-	var feeds []models.Tweet
-	for _, following := range followings {
-		tweets, err := fs.tweetRepo.GetByUsername(following)
-		if err != nil {
-			return nil, err
-		}
-		feeds = append(feeds, tweets...)
-	}
-
-	return feeds, nil
 }

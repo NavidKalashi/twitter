@@ -43,13 +43,10 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 		authRoutes.POST("/create-tweet", tweetController.CreateController)
 		authRoutes.DELETE("/delete-all-tweet", tweetController.DeleteAllController)
 		authRoutes.DELETE("/delete-tweet/:id", tweetController.DeleteController)
-		authRoutes.POST("/tweet/:tweet_id/view", gestureController.AddViewController)
-		authRoutes.POST("/tweet/:tweet_id/like", gestureController.AddLikeController)
-		authRoutes.POST("/tweet/:tweet_id/retweet", gestureController.AddRetweetController)
+		authRoutes.POST("/gesture/:tweet_id/:type", gestureController.AddViewController)
 		authRoutes.POST("/follow/:following_name", followController.FollowingController)
 		authRoutes.DELETE("/unfollow/:following_name", followController.UnfollowController)
 		authRoutes.GET("/follow/your-followers", followController.GetFollowersController)
-		authRoutes.GET("/feeds", followController.FeedController)
 	}
 }
 

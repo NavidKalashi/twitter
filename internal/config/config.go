@@ -28,6 +28,9 @@ type Config struct {
 		UseSSL          bool   `mapstructure:"useSSL"`
 		BucketName      string `mapstructure:"bucketName"`
 	} `mapstructure:"minio"`
+	RabbitMQ struct {
+		URL string `mapstructure:"url"`
+	} `mapstructure:"rabbitmq`
 }
 
 var Cfg Config
