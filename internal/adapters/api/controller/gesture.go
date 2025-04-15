@@ -1,37 +1,29 @@
 package controller
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/NavidKalashi/twitter/internal/core/service"
 	"github.com/gin-gonic/gin"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type GestureControlelr struct {
 	gestureService *service.GestureService
-	channel        *amqp.Channel
+	ProduceService *service.ProduceService
 }
 
-func NewGestureService(gestureService *service.GestureService, channel *amqp.Channel) *GestureControlelr {
-	return &GestureControlelr{gestureService: gestureService, channel: channel}
+func NewGestureService(gestureService *service.GestureService, ProduceService *service.ProduceService) *GestureControlelr {
+	return &GestureControlelr{gestureService: gestureService, ProduceService: ProduceService}
 }
 
 func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 	var gesture struct {
-		TweetID     string   `json:"tweetID"`
-		TypeStr     string   `json:"typeStr"`
+		TweetID string `json:"tweet_id"`
+		TypeStr string `json:"type"`
 	}
 
 	if err := c.BindJSON(&gesture); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
-	
-	body, err := json.Marshal(gesture)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -47,22 +39,13 @@ func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 		return
 	}
 
-	err = gc.channel.Publish(
-		"feed_exchange",
-		"", // routing key for fanout
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        body,
-		},
-	)
+	createdGesture, err := gc.gestureService.AddView(gesture.TweetID, usernameStr, gesture.TypeStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = gc.gestureService.AddView(gesture.TweetID, usernameStr, gesture.TypeStr)
+	err = gc.ProduceService.ProducerGesture(createdGesture)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

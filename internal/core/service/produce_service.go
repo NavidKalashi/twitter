@@ -13,6 +13,10 @@ func NewProduceService(produce ports.Producer) *ProduceService {
 	return &ProduceService{produce: produce}
 }
 
-func (ps *ProduceService) Produce(CreatedTweet *models.Tweet) error {
+func (ps *ProduceService) ProduceFeed(CreatedTweet *models.Tweet) error {
 	return ps.produce.ProducerFeedEvents(CreatedTweet)
+}
+
+func (ps *ProduceService) ProducerGesture(createdGesture *models.Gesture) error {
+	return ps.produce.ProducerGestureEvents(createdGesture)
 }

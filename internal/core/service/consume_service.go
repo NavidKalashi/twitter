@@ -12,10 +12,11 @@ type ConsumeService struct {
 	consume    ports.Consume
 	feedRepo   ports.Feed
 	followRepo ports.Follow
+	gestureRepo ports.Gesture
 }
 
-func NewConsumeService(consume ports.Consume, feedRepo ports.Feed, followRepo ports.Follow) *ConsumeService {
-	return &ConsumeService{consume: consume,feedRepo: feedRepo, followRepo: followRepo}
+func NewConsumeService(consume ports.Consume, feedRepo ports.Feed, followRepo ports.Follow, gestureRepo ports.Gesture) *ConsumeService {
+	return &ConsumeService{consume: consume,feedRepo: feedRepo, followRepo: followRepo, gestureRepo: gestureRepo}
 }
 
 func (cs *ConsumeService) ConsumeFeed() error {
@@ -34,10 +35,24 @@ func (cs *ConsumeService) ConsumeFeed() error {
 		}
 
 		for _, follower := range followers {
-			err = cs.feedRepo.Set(follower.FollowerName, string(tweetJSON))
-			if err != nil {
-				log.Printf("Failed to write feed to Redis: %v", err)
-			}
+			go func(f string) {
+				err := cs.feedRepo.Set(f, string(tweetJSON))
+				if err != nil {
+					log.Printf("Failed to write feed to Redis: %v", err)
+				}
+			}(follower.FollowerName)
+		}
+	})
+	return nil
+}
+
+func (cs *ConsumeService) ConsumeGesture() error {
+	cs.consume.ConsumeGestureEvents(func(e models.Gesture) {
+		log.Printf("gesture event received: %+v", e)
+
+		err := cs.gestureRepo.Set(e.TweetID, e.Type, e.Username)
+		if err != nil {
+			log.Printf("Failed to write gesture to redis: %v", err)
 		}
 	})
 	return nil

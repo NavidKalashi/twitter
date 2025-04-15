@@ -15,7 +15,7 @@ func NewFeedRepository(redis *redis.Client) ports.Feed {
 	return &FeedRepository{redis: redis}
 }
 
-func (fr *FeedRepository) Set(username string, tweet string) error {
+func (fr *FeedRepository) Set(username, tweet string) error {
 	ctx := context.Background()
 	key := "feed_" + username
 	return fr.redis.LPush(ctx, key, tweet).Err()

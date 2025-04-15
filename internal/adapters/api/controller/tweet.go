@@ -46,7 +46,7 @@ func (tc *TweetController) CreateController(c *gin.Context) {
 		return
 	}
 
-	err = tc.produceService.Produce(createdTweets)
+	err = tc.produceService.ProduceFeed(createdTweets)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

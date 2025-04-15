@@ -55,6 +55,7 @@ type Storage interface {
 
 type Gesture interface {
 	Save(gesture *models.Gesture) error
+	Set(tweetID, gestureType, username string) error
 	Count(tweetID, username string) (int, error)
 	GetByUsername(tweetID, username string) (*models.Gesture, error)
 }
@@ -66,6 +67,7 @@ type Consume interface {
 
 type Producer interface {
 	ProducerFeedEvents(createdTweet *models.Tweet) error
+	ProducerGestureEvents(createdGesture *models.Gesture) error
 }
 
 type Follow interface {
@@ -76,6 +78,6 @@ type Follow interface {
 }
 
 type Feed interface {
-	Set(username string, tweet string) error
+	Set(username, tweet string) error
 	Get(username string) ([]string, error)
 }

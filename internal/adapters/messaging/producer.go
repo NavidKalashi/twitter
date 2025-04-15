@@ -37,3 +37,25 @@ func (rp *RabbitMQProducer) ProducerFeedEvents(createdTweet *models.Tweet) error
 	}
 	return nil
 }
+
+func (rp *RabbitMQProducer) ProducerGestureEvents(createdGesture *models.Gesture) error {
+	body, err := json.Marshal(createdGesture)
+	if err != nil {
+		return err
+	}
+
+	err = rp.channel.Publish(
+		"likes_exchange",
+		"", // routing key for fanout
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}

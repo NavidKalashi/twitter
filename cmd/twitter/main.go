@@ -61,9 +61,9 @@ func main() {
 	// refresh token
 	refreshTokenRepository := repository.NewRefreshTokenRepository(db.GetDB())
 
-	// feed producer rabbitmq
-	feedProducer := messaging.NewRabbitMQProducer(rabbit.GetRabbit())
-	feedProduceService := service.NewProduceService(feedProducer)
+	// producer rabbitmq
+	producerMessaging := messaging.NewRabbitMQProducer(rabbit.GetRabbit())
+	produceService := service.NewProduceService(producerMessaging)
 
 	// user
 	userRepository := repository.NewUserRepository(db.GetDB())
@@ -73,24 +73,33 @@ func main() {
 	// tweet
 	tweetRepository := repository.NewTweetRepository(db.GetDB())
 	tweetService := service.NewTweetService(tweetRepository, mediaRepository, mediaStorage)
-	tweetController := controller.NewTweetController(tweetService, feedProduceService)
+	tweetController := controller.NewTweetController(tweetService, produceService)
 
 	// gesture
-	gestureRepository := repository.NewGestureRepository(db.GetDB())
+	gestureRepository := repository.NewGestureRepository(db.GetDB(), redis.GetRedis())
 	gestureService := service.NewGestureService(gestureRepository, tweetRepository)
-	gestureController := controller.NewGestureService(gestureService, rabbit.GetRabbit())
+	gestureController := controller.NewGestureService(gestureService, produceService)
 
 	// follow
 	followRepository := repository.NewFollowRepository(db.GetDB())
 	followService := service.NewFollowService(followRepository, userRepository, tweetRepository, feedRepository)
 	followController := controller.NewFollowController(followService)
 
-	// feed consumer rabbitmq
-	feedRabbit := messaging.NewRabbitMQConsumer(rabbit.GetRabbit())
-	feedService := service.NewConsumeService(feedRabbit, feedRepository, followRepository)
+	// consumer rabbitmq
+	rabbitConsumer := messaging.NewRabbitMQConsumer(rabbit.GetRabbit())
+	consumerService := service.NewConsumeService(rabbitConsumer, feedRepository, followRepository, gestureRepository)
+
+	// feed 
 	go func() {
-		if err := feedService.ConsumeFeed(); err != nil {
+		if err := consumerService.ConsumeFeed(); err != nil {
 			log.Printf("error consuming feed events: %v", err)
+		}
+	}()
+
+	// gesture
+	go func() {
+		if err := consumerService.ConsumeGesture(); err != nil {
+			log.Printf("error consuming gesture events: %v", err)
 		}
 	}()
 

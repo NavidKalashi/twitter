@@ -1,21 +1,31 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type GestureRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis *redis.Client
 }
 
-func NewGestureRepository(db *gorm.DB) ports.Gesture {
-	return &GestureRepository{db: db}
+func NewGestureRepository(db *gorm.DB, redis *redis.Client) ports.Gesture {
+	return &GestureRepository{db: db, redis: redis}
 }
 
 func (gr *GestureRepository) Save(gesture *models.Gesture) error {
 	return gr.db.Create(gesture).Error
+}
+
+func (gr *GestureRepository) Set(tweetID, gestureType, username string) error {
+	ctx := context.Background()
+	key := "gesture_" + tweetID + "_" + gestureType
+	return gr.redis.LPush(ctx, key, username).Err()
 }
 
 func (gr *GestureRepository) Count(tweetID, username string) (int, error) {

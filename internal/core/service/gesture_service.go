@@ -14,12 +14,12 @@ func NewGestureService(gestureRepo ports.Gesture, tweetRepo ports.Tweet) *Gestur
 	return &GestureService{gestureRepo: gestureRepo, tweetRepo: tweetRepo}
 }
 
-func (gs *GestureService) AddView(tweetID, username, typeStr string) error {
+func (gs *GestureService) AddView(tweetID, username, typeStr string) (*models.Gesture, error) {
 	gesture := &models.Gesture{
 		TweetID:  tweetID,
 		Username: username,
 		Type:     typeStr,
 	}
 
-	return gs.gestureRepo.Save(gesture)
+	return gesture, gs.gestureRepo.Save(gesture)
 }
