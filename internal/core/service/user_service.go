@@ -197,30 +197,44 @@ func (us *UserService) Login(email string, password string) (string, string, err
 	}
 
 	if user.OTPVerified {
-		err = us.RefreshTokenRepo.Get(user.ID)
-		if err == nil {
-			return "", "", fmt.Errorf("user is logged in")
-		}
-		
-		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-		if err != nil {
-			fmt.Println("Invalid credentials")
-		}
-
-		refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
-		if err != nil {
-			return "", "", errors.New("refresh token not created")
-		}
-
-		err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
+		refreshModel, err := us.RefreshTokenRepo.Get(user.ID)
 		if err != nil {
 			return "", "", err
 		}
 
-		return refreshToken, accessToken, nil
+		refreshString := refreshModel.Value
+		refreshTokenValidation, err := jwt.Parse(refreshString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return secretKey, nil
+		})
+
+		if err != nil || !refreshTokenValidation.Valid {
+			err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+			if err != nil {
+				fmt.Println("Invalid credentials")
+			}
+
+			refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
+			if err != nil {
+				return "", "", errors.New("refresh token not created")
+			}
+
+			err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
+			if err != nil {
+				return "", "", err
+			}
+
+			return refreshToken, accessToken, nil
+		} else {
+			return "" ,"", fmt.Errorf("you are logged in")
+		}
+
 	} else {
 		return "", "", fmt.Errorf("user not verified")
 	}
+	return "", "", nil
 }
 
 func (us *UserService) Logout(userID string) error {

@@ -16,6 +16,10 @@ func NewRefreshTokenRepository(db *gorm.DB) ports.RefreshToken {
 }
 
 func (rt *RefreshTokenRepository) Create(userID uuid.UUID, refreshToken string) error {
+	if err := rt.db.Where("user_id = ?", userID).Delete(&models.RefreshToken{}).Error; err != nil {
+		return err
+	}
+
 	token := models.RefreshToken{
 		UserID: userID,
 		Value:  refreshToken,
@@ -23,9 +27,12 @@ func (rt *RefreshTokenRepository) Create(userID uuid.UUID, refreshToken string) 
 	return rt.db.Create(&token).Error
 }
 
-func (rt *RefreshTokenRepository) Get(userID uuid.UUID) error {
+func (rt *RefreshTokenRepository) Get(userID uuid.UUID) (*models.RefreshToken, error) {
 	var refreshToken models.RefreshToken
-	return rt.db.Where("user_id = ?", userID).First(&refreshToken).Error
+	if err := rt.db.Where("user_id = ?", userID).First(&refreshToken).Error; err != nil {
+		return nil, err
+	}
+	return &refreshToken, nil
 }
 
 func (rt *RefreshTokenRepository) Delete(userID uuid.UUID) error {

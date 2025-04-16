@@ -31,7 +31,7 @@ type OTP interface {
 
 type RefreshToken interface {
 	Create(userID uuid.UUID, refreshToken string) error
-	Get(userID uuid.UUID) error
+	Get(userID uuid.UUID) (*models.RefreshToken, error)
 	Delete(userID uuid.UUID) error
 }
 
