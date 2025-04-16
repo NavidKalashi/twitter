@@ -234,7 +234,6 @@ func (us *UserService) Login(email string, password string) (string, string, err
 	} else {
 		return "", "", fmt.Errorf("user not verified")
 	}
-	return "", "", nil
 }
 
 func (us *UserService) Logout(userID string) error {
