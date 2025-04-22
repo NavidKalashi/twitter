@@ -3,6 +3,7 @@ package ports
 import (
 	"time"
 
+	"github.com/NavidKalashi/twitter/internal/core/domain/events"
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"
 	"github.com/google/uuid"
 )
@@ -61,13 +62,13 @@ type Gesture interface {
 }
 
 type Consume interface {
-	ConsumeFeedEvents(handler func(models.Tweet)) error
-	ConsumeGestureEvents(handler func(models.Gesture)) error
+	ConsumeFeedEvents(handler func(events.Feed)) error
+	ConsumeGestureEvents(handler func(events.Gesture)) error
 }
 
 type Producer interface {
-	ProducerFeedEvents(createdTweet *models.Tweet) error
-	ProducerGestureEvents(createdGesture *models.Gesture) error
+	ProducerFeedEvents(feed events.Feed) error
+	ProducerGestureEvents(createdGesture events.Gesture) error
 }
 
 type Follow interface {

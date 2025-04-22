@@ -3,7 +3,7 @@ package messaging
 import (
 	"encoding/json"
 
-	"github.com/NavidKalashi/twitter/internal/core/domain/models"
+	"github.com/NavidKalashi/twitter/internal/core/domain/events"
 	"github.com/NavidKalashi/twitter/internal/core/ports"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -16,8 +16,8 @@ func NewRabbitMQProducer(channel *amqp.Channel) ports.Producer {
 	return &RabbitMQProducer{channel: channel}
 }
 
-func (rp *RabbitMQProducer) ProducerFeedEvents(createdTweet *models.Tweet) error {
-	body, err := json.Marshal(createdTweet)
+func (rp *RabbitMQProducer) ProducerFeedEvents(feed events.Feed) error {
+	payload, err := json.Marshal(feed)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (rp *RabbitMQProducer) ProducerFeedEvents(createdTweet *models.Tweet) error
 		false,
 		amqp.Publishing{
 			ContentType: "application/json",
-			Body:        body,
+			Body:        payload,
 		},
 	)
 	if err != nil {
@@ -38,7 +38,7 @@ func (rp *RabbitMQProducer) ProducerFeedEvents(createdTweet *models.Tweet) error
 	return nil
 }
 
-func (rp *RabbitMQProducer) ProducerGestureEvents(createdGesture *models.Gesture) error {
+func (rp *RabbitMQProducer) ProducerGestureEvents(createdGesture events.Gesture) error {
 	body, err := json.Marshal(createdGesture)
 	if err != nil {
 		return err

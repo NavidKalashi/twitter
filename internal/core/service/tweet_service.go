@@ -18,7 +18,7 @@ func NewTweetService(tweetRepo ports.Tweet, mediaRepo ports.Media, storage ports
 	return &TweetService{tweetRepo: tweetRepo, mediaRepo: mediaRepo, storage: storage}
 }
 
-func (ts *TweetService) Create(text, username, fileType string, mediaFiles []string) (*models.Tweet, error) {
+func (ts *TweetService) Create(text, username, fileType string, mediaFiles []string) error {
 	tweet := &models.Tweet{
 		Text:      text,
 		CreatedBy: username,
@@ -26,13 +26,13 @@ func (ts *TweetService) Create(text, username, fileType string, mediaFiles []str
 	}
 
 	if err := ts.tweetRepo.Create(tweet); err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, filePath := range mediaFiles {
 		fileURL, err := ts.storage.UploadMedia(filePath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to upload media: %v", err)
+			return fmt.Errorf("failed to upload media: %v", err)
 		}
 
 		media := &models.Media{
@@ -44,11 +44,11 @@ func (ts *TweetService) Create(text, username, fileType string, mediaFiles []str
 		}
 
 		if err := ts.mediaRepo.SaveMedia(media); err != nil {
-			return nil, fmt.Errorf("failed to save media: %v", err)
+			return fmt.Errorf("failed to save media: %v", err)
 		}
 	}
 
-	return tweet, nil
+	return nil
 }
 
 func (ts *TweetService) DeleteAll(username string) error {

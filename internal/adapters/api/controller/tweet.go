@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"github.com/NavidKalashi/twitter/internal/core/domain/events"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 	"github.com/gin-gonic/gin"
 )
@@ -17,13 +18,9 @@ func NewTweetController(tweetService *service.TweetService, produceService *serv
 }
 
 func (tc *TweetController) CreateController(c *gin.Context) {
-	var tweet struct {
-		Text     string   `json:"text"`
-		Type     string   `json:"type"`
-		FileName []string `json:"file_name"`
-	}
+	var feed events.Feed
 
-	if err := c.BindJSON(&tweet); err != nil {
+	if err := c.BindJSON(&feed); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -40,13 +37,9 @@ func (tc *TweetController) CreateController(c *gin.Context) {
 		return
 	}
 
-	createdTweets, err := tc.tweetService.Create(tweet.Text, usernameStr, tweet.Type, tweet.FileName)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	feed.Username = usernameStr
 
-	err = tc.produceService.ProduceFeed(createdTweets)
+	err := tc.produceService.ProduceFeed(feed)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

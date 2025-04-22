@@ -1,0 +1,29 @@
+config:
+  target: "http://localhost:8080"
+  phases:
+    - duration: 30
+      arrivalRate: 20
+      rampTo: 100
+  payload:
+    path: "data.csv"
+    fields:
+      - token
+      - text
+      - mediaType
+      - fileName
+
+  defaults:
+    headers:
+      content-type: "application/json"
+
+scenarios:
+  - name: Tweet and gesture
+    flow:
+      - post:
+          url: "/protected/create-tweet"
+          headers:
+            Authorization: "{{token}}"
+          json:
+            text: "{{text}}"
+            media_type: "{{mediaType}}"
+            file_name: ["{{fileName}}"]

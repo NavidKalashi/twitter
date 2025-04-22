@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"github.com/NavidKalashi/twitter/internal/core/domain/events"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 	"github.com/gin-gonic/gin"
 )
@@ -17,10 +18,7 @@ func NewGestureService(gestureService *service.GestureService, ProduceService *s
 }
 
 func (gc *GestureControlelr) AddViewController(c *gin.Context) {
-	var gesture struct {
-		TweetID string `json:"tweet_id"`
-		TypeStr string `json:"type"`
-	}
+	var gesture events.Gesture
 
 	if err := c.BindJSON(&gesture); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
@@ -39,17 +37,13 @@ func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 		return
 	}
 
-	createdGesture, err := gc.gestureService.AddView(gesture.TweetID, usernameStr, gesture.TypeStr)
+	gesture.Username = usernameStr
+
+	err := gc.ProduceService.ProducerGesture(gesture)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = gc.ProduceService.ProducerGesture(createdGesture)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "view added"})
+	c.JSON(http.StatusOK, gin.H{"message": "gesture added"})
 }

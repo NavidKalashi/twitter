@@ -87,7 +87,7 @@ func main() {
 
 	// consumer rabbitmq
 	rabbitConsumer := messaging.NewRabbitMQConsumer(rabbit.GetRabbit())
-	consumerService := service.NewConsumeService(rabbitConsumer, feedRepository, followRepository, gestureRepository)
+	consumerService := service.NewConsumeService(rabbitConsumer, feedRepository, followRepository, gestureRepository, *tweetService, *gestureService)
 
 	// feed 
 	go func() {
