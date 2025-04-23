@@ -30,8 +30,6 @@ func NewConsumeService(consume ports.Consume, feedRepo ports.Feed, followRepo po
 
 func (cs *ConsumeService) ConsumeFeed() error {
 	cs.consume.ConsumeFeedEvents(func(e events.Feed) {
-		log.Printf("feed event received: %+v", e)
-
 		followers, err := cs.followRepo.GetFollowers(e.Username)
 		if err != nil {
 			log.Println(err)
@@ -63,8 +61,6 @@ func (cs *ConsumeService) ConsumeFeed() error {
 
 func (cs *ConsumeService) ConsumeGesture() error {
 	cs.consume.ConsumeGestureEvents(func(e events.Gesture) {
-		log.Printf("gesture event received: %+v", e)
-
 		if err:= cs.gestureService.Add(e.TweetID, e.Username, e.GestureType); err != nil {
 			log.Printf("Failed to write gesture to postgres: %v", err)
 		}

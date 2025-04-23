@@ -25,6 +25,8 @@ func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 		return
 	}
 
+	tweetID := c.Param("tweet_id")
+
 	username, exists := c.Get("username")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Username not found in context"})
@@ -38,6 +40,7 @@ func (gc *GestureControlelr) AddViewController(c *gin.Context) {
 	}
 
 	gesture.Username = usernameStr
+	gesture.TweetID = tweetID
 
 	err := gc.ProduceService.ProducerGesture(gesture)
 	if err != nil {

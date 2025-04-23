@@ -59,6 +59,7 @@ type Gesture interface {
 	Set(tweetID, gestureType, username string) error
 	Count(tweetID, username string) (int, error)
 	GetByUsername(tweetID, username string) (*models.Gesture, error)
+	Exists(tweetID, username, typeStr string) (bool, error)
 }
 
 type Consume interface {

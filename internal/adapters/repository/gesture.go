@@ -24,8 +24,28 @@ func (gr *GestureRepository) Save(gesture *models.Gesture) error {
 
 func (gr *GestureRepository) Set(tweetID, gestureType, username string) error {
 	ctx := context.Background()
-	key := "gesture_" + tweetID + "_" + gestureType
-	return gr.redis.LPush(ctx, key, username).Err()
+	key := "gesture_" + tweetID
+	value := username + "_" + gestureType
+
+	items, err := gr.redis.LRange(ctx, key, 0, -1).Result()
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		if item == value {
+			return nil
+		}
+	}
+
+	return gr.redis.LPush(ctx, key, value).Err()
+}
+
+func (r *GestureRepository) Exists(tweetID, username, typeStr string) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.Gesture{}).
+		Where("tweet_id = ? AND username = ? AND type = ?", tweetID, username, typeStr).
+		Count(&count).Error
+	return count > 0, err
 }
 
 func (gr *GestureRepository) Count(tweetID, username string) (int, error) {

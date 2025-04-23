@@ -15,6 +15,14 @@ func NewGestureService(gestureRepo ports.Gesture, tweetRepo ports.Tweet) *Gestur
 }
 
 func (gs *GestureService) Add(tweetID, username, typeStr string) error {
+	exists, err := gs.gestureRepo.Exists(tweetID, username, typeStr)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil 
+	}
+
 	gesture := &models.Gesture{
 		TweetID:  tweetID,
 		Username: username,
