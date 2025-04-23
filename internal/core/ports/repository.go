@@ -77,6 +77,7 @@ type Follow interface {
 	Delete(followerName, followingName string) error
 	GetFollowers(username string) ([]models.Follow, error)
 	GetFollowing(username string) ([]models.Follow, error)
+	Exists(followerName, followingName string) (bool, error)
 }
 
 type Feed interface {

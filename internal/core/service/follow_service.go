@@ -24,9 +24,21 @@ func NewFollowService(followRepo ports.Follow, userRepo ports.User, tweetRepo po
 }
 
 func (fs *FollowService) FollowUser(followerName, followingName string) error {
+	if followerName == followingName {
+		return fmt.Errorf("you cannot follow yourself")
+	}
+
 	user, err := fs.userRepo.GetByName(followingName)
 	if err != nil {
 		return fmt.Errorf("user does not exist")
+	}
+
+	exists, err := fs.followRepo.Exists(followerName, followingName)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil // یا return fmt.Errorf("already following this user")
 	}
 
 	follow := &models.Follow{

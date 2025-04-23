@@ -38,3 +38,11 @@ func (fr *FollowRepository) GetFollowing(username string) ([]models.Follow, erro
 	}
 	return follow, nil
 }
+
+func (r *FollowRepository) Exists(followerName, followingName string) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.Follow{}).
+		Where("follower_name = ? AND following_name = ?", followerName, followingName).
+		Count(&count).Error
+	return count > 0, err
+}
