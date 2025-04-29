@@ -8,11 +8,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type EmailService interface {
-	Send(to string, message string) error
-	SendOTP(to string, code uint) error
-}
-
 type MockEmailService struct {
 	mock.Mock
 }
