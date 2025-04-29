@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	
-	"github.com/NavidKalashi/twitter/internal/config"
+	"github.com/NavidKalashi/twitter/cmd/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"github.com/NavidKalashi/twitter/internal/core/domain/models"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/NavidKalashi/twitter/internal/config"
+	"github.com/NavidKalashi/twitter/cmd/config"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )

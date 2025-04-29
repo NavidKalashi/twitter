@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"fmt"
 
-	"github.com/NavidKalashi/twitter/internal/config"
+	"github.com/NavidKalashi/twitter/cmd/config"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 

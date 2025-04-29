@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/NavidKalashi/twitter/internal/config"
+	"github.com/NavidKalashi/twitter/cmd/config"
 	"github.com/redis/go-redis/v9"
 )
 

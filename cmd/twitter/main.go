@@ -12,7 +12,7 @@ import (
 	"github.com/NavidKalashi/twitter/internal/adapters/messaging"
 	"github.com/NavidKalashi/twitter/internal/adapters/repository"
 	"github.com/NavidKalashi/twitter/internal/adapters/storage"
-	"github.com/NavidKalashi/twitter/internal/config"
+	"github.com/NavidKalashi/twitter/cmd/config"
 	"github.com/NavidKalashi/twitter/internal/core/service"
 	"github.com/gin-gonic/gin"
 )
