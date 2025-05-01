@@ -30,7 +30,7 @@ type Config struct {
 	} `mapstructure:"minio"`
 	RabbitMQ struct {
 		URL string `mapstructure:"url"`
-	} `mapstructure:"rabbitmq`
+	} `mapstructure:"rabbitmq"`
 }
 
 var Cfg Config
@@ -38,7 +38,7 @@ var Cfg Config
 func LoadConfig() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("internal/config")
+	viper.AddConfigPath("cmd/config")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("error reading config file, %s", err)
