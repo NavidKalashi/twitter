@@ -28,26 +28,30 @@ func NewServer(engine *gin.Engine, userController *controller.UserController, tw
 
 func (s *Server) AddRoutes(userController *controller.UserController, tweetController *controller.TweetController, gestureController *controller.GestureControlelr, followController *controller.FollowController) {
 	authRoutes := s.engine.Group("/protected")
-	s.engine.POST("/register", userController.RegisterController)
-	s.engine.POST("/verify-email", userController.VerifyController)
-	s.engine.POST("/refresh", userController.RefreshController)
-	s.engine.POST("/send-code-again", userController.ResendController)
-	s.engine.POST("/login", userController.LoginController)
-	s.engine.POST("/search", userController.SearchController)
+	s.engine.POST("/auth/register", userController.RegisterController)
+	s.engine.POST("/auth/verify-email", userController.VerifyController)
+	s.engine.POST("/auth/refresh", userController.RefreshController)
+	s.engine.POST("/auth/resend-code", userController.ResendController)
+	s.engine.POST("/auth/login", userController.LoginController)
+	s.engine.POST("/users/search", userController.SearchController)
 	s.engine.GET("/tweets", tweetController.GetController)
+	
 	authRoutes.Use(middleware.AuthMiddleware())
 	{
-		authRoutes.GET("/profile", userController.GetController)
-		authRoutes.DELETE("/logout", userController.LogoutController)
-		authRoutes.PUT("/edit", userController.EditController)
-		authRoutes.POST("/create-tweet", tweetController.CreateController)
-		authRoutes.DELETE("/delete-all-tweet", tweetController.DeleteAllController)
-		authRoutes.DELETE("/delete-tweet/:id", tweetController.DeleteController)
-		authRoutes.POST("/gesture/:tweet_id", gestureController.AddViewController)
-		authRoutes.POST("/follow/:following_name", followController.FollowingController)
-		authRoutes.DELETE("/unfollow/:following_name", followController.UnfollowController)
-		authRoutes.GET("/follow/your-followers", followController.GetFollowersController)
-	}
+		authRoutes.GET("/users/me", userController.GetController)
+		authRoutes.PUT("/users/me", userController.EditController)
+		authRoutes.DELETE("/auth/logout", userController.LogoutController)
+	
+		authRoutes.POST("/tweets", tweetController.CreateController)
+		authRoutes.DELETE("/tweets", tweetController.DeleteAllController)
+		authRoutes.DELETE("/tweets/:id", tweetController.DeleteController)
+	
+		authRoutes.POST("/tweets/:tweet_id/gestures", gestureController.AddViewController)
+	
+		authRoutes.POST("/users/:username/follow", followController.FollowingController)
+		authRoutes.DELETE("/users/:username/follow", followController.UnfollowController)
+		authRoutes.GET("/users/me/followers", followController.GetFollowersController)
+	}	
 }
 
 func (s *Server) Start() {

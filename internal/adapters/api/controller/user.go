@@ -144,16 +144,13 @@ func (uc *UserController) ResendController(c *gin.Context) {
 }
 
 func (uc *UserController) SearchController(c *gin.Context) {
-	var json struct {
-		Username string `json:"username"`
-	}
-
-	if err := c.ShouldBindJSON(&json); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+	username := c.Query("username")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "username is required"})
 		return
 	}
-
-	user, err := uc.userService.Search(json.Username)
+	
+	user, err := uc.userService.Search(username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
