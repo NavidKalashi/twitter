@@ -39,17 +39,17 @@ func (s *Server) AddRoutes(userController *controller.UserController, tweetContr
 	authRoutes.Use(middleware.AuthMiddleware())
 	{
 		authRoutes.GET("/users/me", userController.GetController)
-		authRoutes.PUT("/users/me", userController.EditController)
+		authRoutes.PUT("/users/me/edit", userController.EditController)
 		authRoutes.DELETE("/auth/logout", userController.LogoutController)
 	
 		authRoutes.POST("/tweets", tweetController.CreateController)
-		authRoutes.DELETE("/tweets", tweetController.DeleteAllController)
+		authRoutes.DELETE("/tweets/delete", tweetController.DeleteAllController)
 		authRoutes.DELETE("/tweets/:id", tweetController.DeleteController)
 	
 		authRoutes.POST("/tweets/:tweet_id/gestures", gestureController.AddViewController)
 	
-		authRoutes.POST("/users/:username/follow", followController.FollowingController)
-		authRoutes.DELETE("/users/:username/follow", followController.UnfollowController)
+		authRoutes.POST("/users/:following_name/follow", followController.FollowingController)
+		authRoutes.DELETE("/users/:following_name/unfollow", followController.UnfollowController)
 		authRoutes.GET("/users/me/followers", followController.GetFollowersController)
 	}	
 }

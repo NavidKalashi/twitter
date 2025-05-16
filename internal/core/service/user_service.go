@@ -196,45 +196,44 @@ func (us *UserService) Login(email string, password string) (string, string, err
 		return "", "", fmt.Errorf("email not found")
 	}
 
-	if user.OTPVerified {
-		refreshModel, err := us.RefreshTokenRepo.Get(user.ID)
-		if err != nil {
-			return "", "", err
-		}
+	if !user.OTPVerified {
+		return "", "", fmt.Errorf("user not verified")
+	}
 
-		refreshString := refreshModel.Value
-		refreshTokenValidation, err := jwt.Parse(refreshString, func(token *jwt.Token) (interface{}, error) {
+	refreshModel, err := us.RefreshTokenRepo.Get(user.ID)
+	tokenExists := err == nil
+
+	if tokenExists {
+		refreshTokenValidation, err := jwt.Parse(refreshModel.Value, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return secretKey, nil
 		})
 
-		if err != nil || !refreshTokenValidation.Valid {
-			err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-			if err != nil {
-				fmt.Println("Invalid credentials")
-			}
-
-			refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
-			if err != nil {
-				return "", "", errors.New("refresh token not created")
-			}
-
-			err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
-			if err != nil {
-				return "", "", err
-			}
-
-			return refreshToken, accessToken, nil
-		} else {
-			return "" ,"", fmt.Errorf("you are logged in")
+		if err == nil && refreshTokenValidation.Valid {
+			return "", "", fmt.Errorf("you are already logged in")
 		}
-
-	} else {
-		return "", "", fmt.Errorf("user not verified")
 	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return "", "", fmt.Errorf("invalid credentials")
+	}
+
+	refreshToken, accessToken, err := jwtPackage.GenerateAccessAndRefresh(user)
+	if err != nil {
+		return "", "", errors.New("could not generate tokens")
+	}
+
+	err = us.RefreshTokenRepo.Create(user.ID, refreshToken)
+	if err != nil {
+		return "", "", err
+	}
+
+	return refreshToken, accessToken, nil
 }
+
 
 func (us *UserService) Logout(userID string) error {
 	user, err := us.GetByID(userID)
